@@ -452,7 +452,7 @@ function ConfiguracionView() {
           { label: "Plataforma",    value: "Plataforma de Validación Académica" },
           { label: "Versión",       value: "v1.0.0" },
           { label: "Base de datos", value: "Supabase" },
-          { label: "Autenticación", value: "Sesión local (sessionStorage)" },
+          { label: "Autenticación", value: "Sesión persistente (localStorage)" },
           { label: "Usuario admin", value: "admin" },
         ].map(({ label, value }) => (
           <div key={label} className="flex justify-between items-center px-6 py-4 gap-4">

@@ -26,7 +26,7 @@ export default function Login({ onLogin }) {
         usuario.trim() === CREDENTIALS.usuario &&
         contrasenia === CREDENTIALS.contrasenia
       ) {
-        sessionStorage.setItem("pva_admin", "1")
+        localStorage.setItem("pva_admin", "1")
         onLogin()
       } else {
         setError(true)

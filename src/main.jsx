@@ -7,7 +7,7 @@ import "./App.css"
 
 function Root() {
   const [hash, setHash] = useState(window.location.hash)
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem("pva_admin") === "1")
+  const [authed, setAuthed] = useState(() => localStorage.getItem("pva_admin") === "1")
 
   useEffect(() => {
     const handler = () => setHash(window.location.hash)
@@ -22,7 +22,7 @@ function Root() {
   // Panel de admin — requiere login
   if (!authed) return <Login onLogin={() => setAuthed(true)} />
 
-  return <App onLogout={() => { sessionStorage.removeItem("pva_admin"); setAuthed(false) }} />
+  return <App onLogout={() => { localStorage.removeItem("pva_admin"); setAuthed(false) }} />
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
