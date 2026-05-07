@@ -562,6 +562,123 @@ function VariableCard({ variable, idx, rating, onChange }) {
 
 // ── Formulario principal ───────────────────────────────────────────────────
 
+function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
+  const variables = estudio.variables || []
+  const dims = [...new Set(variables.map((v) => v.dimension))]
+
+  const completedCount = variables.filter((v) => {
+    const r = ratings[v.id]
+    return r?.claridad && r?.relevancia && r?.coherencia
+  }).length
+  const incomplete = variables.length - completedCount
+
+  return (
+    <EvalLayout progress={Math.round((completedCount / variables.length) * 100)} title={estudio.titulo}>
+      <div className="max-w-2xl mx-auto space-y-5 pb-32">
+        {/* Header */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-primary px-6 py-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/60 mb-1">Revisión de respuestas</p>
+            <h2 className="font-bold text-xl text-white">{estudio.titulo}</h2>
+          </div>
+          <div className="grid grid-cols-3 divide-x divide-slate-100">
+            {[
+              { icon: "quiz",         value: completedCount,           label: "completadas", color: "text-green-600" },
+              { icon: "pending",      value: incomplete,               label: "pendientes",  color: incomplete > 0 ? "text-amber-600" : "text-slate-400" },
+              { icon: "category",     value: dims.length,              label: "dimensiones", color: "text-primary" },
+            ].map(({ icon, value, label, color }) => (
+              <div key={label} className="flex flex-col items-center py-4 gap-1">
+                <Icon name={icon} className={`text-xl ${color}`} />
+                <span className={`font-bold text-2xl ${color}`}>{value}</span>
+                <span className="text-xs text-slate-400">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {incomplete > 0 && (
+          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
+            <Icon name="warning" className="flex-shrink-0" />
+            {incomplete} variable{incomplete !== 1 ? "s" : ""} sin completar. Puede enviar de todas formas o regresar a completarlas.
+          </div>
+        )}
+
+        {/* Variables por dimensión */}
+        {dims.map((dim) => {
+          const dimVars = variables.filter((v) => v.dimension === dim)
+          return (
+            <div key={dim} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                <Icon name="category" className="text-primary text-base" />
+                <span className="font-semibold text-slate-700 text-sm">{dim}</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {dimVars.map((v) => {
+                  const r = ratings[v.id]
+                  const isComplete = r?.claridad && r?.relevancia && r?.coherencia
+                  return (
+                    <div key={v.id} className="px-5 py-3 flex items-start gap-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        isComplete ? "bg-green-500" : "bg-amber-200"
+                      }`}>
+                        <Icon name={isComplete ? "check" : "pending"} className="text-white text-xs" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-800 truncate">{v.nombre}</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {[
+                            { label: "Claridad",   val: r?.claridad },
+                            { label: "Relevancia", val: r?.relevancia },
+                            { label: "Coherencia", val: r?.coherencia },
+                          ].map(({ label, val }) => {
+                            const lk = val ? LIKERT[val - 1] : null
+                            return (
+                              <span key={label} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                                lk
+                                  ? `${lk.color.border} ${lk.color.bg} ${lk.color.text}`
+                                  : "border-slate-200 bg-slate-50 text-slate-400"
+                              }`}>
+                                {label}: {val ? `${val} – ${lk?.short}` : "—"}
+                              </span>
+                            )
+                          })}
+                        </div>
+                        {r?.observaciones && (
+                          <p className="text-xs text-slate-500 mt-1 italic">"{r.observaciones}"</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Barra de acciones fija */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 px-5 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors"
+          >
+            <Icon name="arrow_back" className="text-base" /> Volver a editar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={submitting}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm hover:opacity-90 disabled:opacity-50 transition-all shadow-md"
+          >
+            <Icon name="send" className="text-base" />
+            {submitting ? "Enviando…" : "Confirmar y enviar"}
+          </button>
+        </div>
+      </div>
+    </EvalLayout>
+  )
+}
+
 function ScreenForm({ estudio, sessionId, onDone }) {
   const variables = estudio.variables || []
   const dims = [...new Set(variables.map((v) => v.dimension))]
@@ -577,8 +694,10 @@ function ScreenForm({ estudio, sessionId, onDone }) {
   const [lastSaved, setLastSaved] = useState(null)
   const [toast, setToast] = useState(null)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showReview, setShowReview] = useState(false)
   const [activeDim, setActiveDim] = useState(dims[0] ?? null)
   const dimRefs = useRef({})
+  const autoSaveTimer = useRef(null)
 
   const completedCount = variables.filter((v) => {
     const r = ratings[v.id]
@@ -640,6 +759,30 @@ function ScreenForm({ estudio, sessionId, onDone }) {
     Object.values(dimRefs.current).forEach((el) => el && observer.observe(el))
     return () => observer.disconnect()
   }, [loadingExisting])
+
+  // Auto-save silencioso (debounced 3 s)
+  useEffect(() => {
+    if (loadingExisting) return
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    autoSaveTimer.current = setTimeout(async () => {
+      try {
+        await supabase
+          .from("respuestas")
+          .upsert(buildRows("borrador"), { onConflict: "estudio_id,session_id,variable_id" })
+        setLastSaved(new Date().toISOString())
+      } catch {
+        // silent fail — user can always save manually
+      }
+    }, 3000)
+    return () => clearTimeout(autoSaveTimer.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ratings, loadingExisting])
+
+  // Variable siguiente sin completar
+  const nextIncomplete = variables.find((v) => {
+    const r = ratings[v.id]
+    return !r?.claridad || !r?.relevancia || !r?.coherencia
+  })
 
   const notify = useCallback((type, msg) => {
     setToast({ type, msg })
@@ -708,6 +851,16 @@ function ScreenForm({ estudio, sessionId, onDone }) {
         <div className="w-12 h-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
       </div>
     </EvalLayout>
+  )
+
+  if (showReview) return (
+    <ScreenReview
+      estudio={estudio}
+      ratings={ratings}
+      submitting={submitting}
+      onBack={() => setShowReview(false)}
+      onConfirm={handleSubmit}
+    />
   )
 
   return (
@@ -877,12 +1030,12 @@ function ScreenForm({ estudio, sessionId, onDone }) {
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm hidden sm:block">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="text-sm hidden sm:flex items-center gap-3">
               {allComplete ? (
                 <span className="text-green-600 font-semibold flex items-center gap-1.5">
                   <Icon name="check_circle" className="text-base" />
-                  Todas las variables completadas
+                  Todas completadas
                 </span>
               ) : (
                 <span className="text-slate-500">
@@ -891,33 +1044,41 @@ function ScreenForm({ estudio, sessionId, onDone }) {
                 </span>
               )}
               {lastSaved && (
-                <span className="text-xs text-slate-400 ml-3">
-                  · Guardado {new Date(lastSaved).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+                <span className="text-xs text-slate-400">
+                  · Auto-guardado {new Date(lastSaved).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
+              {nextIncomplete && !allComplete && (
+                <button
+                  onClick={() => document.getElementById(`var-${nextIncomplete.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                  className="flex-1 sm:flex-none px-4 py-2.5 border border-slate-300 text-slate-600 font-semibold
+                             rounded-xl text-sm hover:bg-slate-50 flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Icon name="arrow_downward" className="text-base" />
+                  <span className="hidden sm:inline">Pendiente</span>
+                </button>
+              )}
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 sm:flex-none px-5 py-2.5 border border-slate-300 text-slate-700 font-semibold
+                className="flex-1 sm:flex-none px-4 py-2.5 border border-slate-300 text-slate-700 font-semibold
                            rounded-xl text-sm hover:bg-slate-50 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
               >
                 <Icon name="save" className="text-base" />
-                {saving ? "Guardando…" : "Guardar"}
+                {saving ? "…" : "Guardar"}
               </button>
               <button
-                onClick={() => setShowConfirm(true)}
+                onClick={() => setShowReview(true)}
                 disabled={submitting}
-                className={`flex-1 sm:flex-none px-6 py-2.5 font-bold rounded-xl text-sm
-                           flex items-center justify-center gap-2 transition-all shadow-md ${
-                  allComplete
-                    ? "bg-primary text-white hover:opacity-90"
-                    : "bg-primary text-white hover:opacity-90 opacity-60"
-                } disabled:opacity-40 disabled:cursor-not-allowed`}
+                className={`flex-1 sm:flex-none px-5 py-2.5 font-bold rounded-xl text-sm
+                           flex items-center justify-center gap-2 transition-all shadow-md
+                           bg-primary text-white hover:opacity-90
+                           disabled:opacity-40 disabled:cursor-not-allowed`}
               >
-                <Icon name="send" className="text-base" />
-                {submitting ? "Enviando…" : allComplete ? "Enviar validación" : `Faltan ${variables.length - completedCount}`}
+                <Icon name="fact_check" className="text-base" />
+                {allComplete ? "Revisar y enviar" : `Revisar (${variables.length - completedCount} faltan)`}
               </button>
             </div>
           </div>

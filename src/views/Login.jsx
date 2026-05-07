@@ -1,6 +1,9 @@
 import { useState } from "react"
 
-const CREDENTIALS = { usuario: "admin", contrasenia: "admin5" }
+const CREDENTIALS = {
+  usuario: import.meta.env.VITE_ADMIN_USER || "admin",
+  contrasenia: import.meta.env.VITE_ADMIN_PASS || "admin5",
+}
 
 function Icon({ name, className = "" }) {
   return <span className={`material-symbols-outlined leading-none select-none ${className}`}>{name}</span>

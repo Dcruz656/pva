@@ -319,15 +319,28 @@ function StepPublicar({ form }) {
 }
 
 // ── Main wizard component ──────────────────────────────────────────────────
-export default function CrearEvaluacion({ onBack, onCreated }) {
+export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
+  const isEdit = Boolean(estudioToEdit)
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState({
-    titulo: "",
-    descripcion: "",
-    fecha_limite: "",
-    variables: [],
-    modo_acceso: "liga_publica",
-    codigo: generateCode(),
+  const [form, setForm] = useState(() => {
+    if (estudioToEdit) {
+      return {
+        titulo:       estudioToEdit.titulo ?? "",
+        descripcion:  estudioToEdit.descripcion ?? "",
+        fecha_limite: estudioToEdit.fecha_limite ? estudioToEdit.fecha_limite.split("T")[0] : "",
+        variables:    estudioToEdit.variables ?? [],
+        modo_acceso:  estudioToEdit.modo_acceso ?? "liga_publica",
+        codigo:       estudioToEdit.codigo ?? generateCode(),
+      }
+    }
+    return {
+      titulo: "",
+      descripcion: "",
+      fecha_limite: "",
+      variables: [],
+      modo_acceso: "liga_publica",
+      codigo: generateCode(),
+    }
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -356,11 +369,9 @@ export default function CrearEvaluacion({ onBack, onCreated }) {
         codigo: form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
         estado:        "activo",
       }
-      const { data, error: err } = await supabase
-        .from("estudios")
-        .insert(payload)
-        .select()
-        .single()
+      const { data, error: err } = isEdit
+        ? await supabase.from("estudios").update(payload).eq("id", estudioToEdit.id).select().single()
+        : await supabase.from("estudios").insert(payload).select().single()
       if (err) throw err
       onCreated(data)
     } catch (err) {
@@ -378,8 +389,8 @@ export default function CrearEvaluacion({ onBack, onCreated }) {
           <Icon name="arrow_back" className="text-2xl" />
         </button>
         <div>
-          <h2 className="font-bold text-2xl text-primary">Nueva Evaluación</h2>
-          <p className="text-sm text-on-surface-variant">Diseña un instrumento de validación personalizado</p>
+          <h2 className="font-bold text-2xl text-primary">{isEdit ? "Editar Evaluación" : "Nueva Evaluación"}</h2>
+          <p className="text-sm text-on-surface-variant">{isEdit ? "Modifica los datos del instrumento de validación" : "Diseña un instrumento de validación personalizado"}</p>
         </div>
       </div>
 
@@ -452,6 +463,8 @@ export default function CrearEvaluacion({ onBack, onCreated }) {
           >
             {saving ? (
               <><Icon name="hourglass_empty" className="text-base" /> Publicando…</>
+            ) : isEdit ? (
+              <><Icon name="save" className="text-base" /> Guardar cambios</>
             ) : (
               <><Icon name="publish" className="text-base" /> Publicar Evaluación</>
             )}
