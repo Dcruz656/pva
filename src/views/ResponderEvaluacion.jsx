@@ -366,7 +366,19 @@ function ScreenWelcome({ estudio, onStart }) {
           </div>
         )}
 
-        {/* Instrucciones */}
+        {/* Instrucciones del investigador */}
+        {estudio.instrucciones && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <h3 className="font-semibold text-slate-700 text-sm mb-3 flex items-center gap-2">
+              <Icon name="assignment" className="text-primary text-base" /> Instrucciones del investigador
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              {estudio.instrucciones}
+            </p>
+          </div>
+        )}
+
+        {/* Instrucciones generales */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
           <h3 className="font-semibold text-slate-700 text-sm mb-3 flex items-center gap-2">
             <Icon name="info" className="text-primary text-base" /> Antes de comenzar

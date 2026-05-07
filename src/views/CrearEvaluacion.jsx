@@ -38,14 +38,40 @@ function StepInfo({ form, onChange }) {
         />
       </div>
       <div>
-        <label className="block text-sm font-semibold text-on-surface mb-1">Fecha límite</label>
-        <input
-          type="date"
-          value={form.fecha_limite}
-          onChange={(e) => onChange("fecha_limite", e.target.value)}
-          min={new Date().toISOString().split("T")[0]}
-          className="w-full border border-outline-variant rounded-lg px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+        <label className="block text-sm font-semibold text-on-surface mb-1">
+          Instrucciones para el evaluador
+        </label>
+        <textarea
+          value={form.instrucciones}
+          onChange={(e) => onChange("instrucciones", e.target.value)}
+          placeholder="Indique al evaluador cómo responder, qué criterios tener en cuenta, contexto del estudio, etc."
+          rows={4}
+          className="w-full border border-outline-variant rounded-lg px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface resize-none"
         />
+        <p className="text-xs text-on-surface-variant mt-1">
+          Se mostrará en la pantalla de bienvenida antes de que el evaluador comience.
+        </p>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-on-surface mb-1">Fecha de inicio</label>
+          <input
+            type="date"
+            value={form.fecha_inicio}
+            onChange={(e) => onChange("fecha_inicio", e.target.value)}
+            className="w-full border border-outline-variant rounded-lg px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-on-surface mb-1">Fecha límite</label>
+          <input
+            type="date"
+            value={form.fecha_limite}
+            onChange={(e) => onChange("fecha_limite", e.target.value)}
+            min={form.fecha_inicio || new Date().toISOString().split("T")[0]}
+            className="w-full border border-outline-variant rounded-lg px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+          />
+        </div>
       </div>
     </div>
   )
@@ -272,12 +298,18 @@ function StepPublicar({ form }) {
     <div className="space-y-5">
       <div className="bg-surface-container-low rounded-xl border border-outline-variant divide-y divide-outline-variant">
         {[
-          { label: "Título",        value: form.titulo },
-          { label: "Descripción",   value: form.descripcion || "—" },
-          { label: "Fecha límite",  value: form.fecha_limite
+          { label: "Título",         value: form.titulo },
+          { label: "Descripción",    value: form.descripcion || "—" },
+          { label: "Instrucciones",  value: form.instrucciones
+              ? (form.instrucciones.length > 80 ? form.instrucciones.substring(0, 80) + "…" : form.instrucciones)
+              : "—" },
+          { label: "Fecha de inicio", value: form.fecha_inicio
+              ? new Date(form.fecha_inicio + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
+              : "Sin fecha de inicio" },
+          { label: "Fecha límite",   value: form.fecha_limite
               ? new Date(form.fecha_limite + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
               : "Sin fecha límite" },
-          { label: "Variables",     value: `${form.variables.length} ítems en ${dims.length} dimensión${dims.length !== 1 ? "es" : ""}` },
+          { label: "Variables",      value: `${form.variables.length} ítems en ${dims.length} dimensión${dims.length !== 1 ? "es" : ""}` },
           { label: "Tipo de acceso", value: form.modo_acceso === "liga_publica" ? "Acceso libre" : "Con código de acceso" },
           ...(form.modo_acceso === "invitacion_codigo"
             ? [{ label: "Código de acceso", value: form.codigo, mono: true }]
@@ -325,21 +357,25 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
   const [form, setForm] = useState(() => {
     if (estudioToEdit) {
       return {
-        titulo:       estudioToEdit.titulo ?? "",
-        descripcion:  estudioToEdit.descripcion ?? "",
-        fecha_limite: estudioToEdit.fecha_limite ? estudioToEdit.fecha_limite.split("T")[0] : "",
-        variables:    estudioToEdit.variables ?? [],
-        modo_acceso:  estudioToEdit.modo_acceso ?? "liga_publica",
-        codigo:       estudioToEdit.codigo ?? generateCode(),
+        titulo:        estudioToEdit.titulo ?? "",
+        descripcion:   estudioToEdit.descripcion ?? "",
+        instrucciones: estudioToEdit.instrucciones ?? "",
+        fecha_inicio:  estudioToEdit.fecha_inicio ? estudioToEdit.fecha_inicio.split("T")[0] : "",
+        fecha_limite:  estudioToEdit.fecha_limite ? estudioToEdit.fecha_limite.split("T")[0] : "",
+        variables:     estudioToEdit.variables ?? [],
+        modo_acceso:   estudioToEdit.modo_acceso ?? "liga_publica",
+        codigo:        estudioToEdit.codigo ?? generateCode(),
       }
     }
     return {
-      titulo: "",
-      descripcion: "",
-      fecha_limite: "",
-      variables: [],
-      modo_acceso: "liga_publica",
-      codigo: generateCode(),
+      titulo:        "",
+      descripcion:   "",
+      instrucciones: "",
+      fecha_inicio:  "",
+      fecha_limite:  "",
+      variables:     [],
+      modo_acceso:   "liga_publica",
+      codigo:        generateCode(),
     }
   })
   const [saving, setSaving] = useState(false)
@@ -363,10 +399,12 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
       const payload = {
         titulo:        form.titulo.trim(),
         descripcion:   form.descripcion.trim() || null,
+        instrucciones: form.instrucciones.trim() || null,
+        fecha_inicio:  form.fecha_inicio || null,
         fecha_limite:  form.fecha_limite || null,
         variables:     form.variables,
         modo_acceso:   form.modo_acceso,
-        codigo: form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
+        codigo:        form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
         estado:        "activo",
       }
       const { data, error: err } = isEdit
