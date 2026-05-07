@@ -79,7 +79,7 @@ function StepInfo({ form, onChange }) {
 
 // ── Step 2: Variables ──────────────────────────────────────────────────────
 function StepVariables({ variables, onChange }) {
-  const [newVar, setNewVar] = useState({ nombre: "", dimension: "" })
+  const [newVar, setNewVar] = useState({ nombre: "", descripcion: "", dimension: "" })
   const [editingId, setEditingId] = useState(null)
 
   const dimensionesExistentes = [...new Set(variables.map((v) => v.dimension).filter(Boolean))]
@@ -89,10 +89,11 @@ function StepVariables({ variables, onChange }) {
     const v = {
       id: Date.now(),
       nombre: newVar.nombre.trim(),
+      descripcion: newVar.descripcion.trim() || null,
       dimension: newVar.dimension.trim() || "General",
     }
     onChange([...variables, v])
-    setNewVar({ nombre: "", dimension: "" })
+    setNewVar({ nombre: "", descripcion: "", dimension: "" })
   }
 
   function removeVariable(id) {
@@ -120,7 +121,15 @@ function StepVariables({ variables, onChange }) {
                   <input
                     value={v.nombre}
                     onChange={(e) => updateVariable(v.id, "nombre", e.target.value)}
+                    placeholder="Nombre de la variable"
                     className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+                  />
+                  <textarea
+                    value={v.descripcion ?? ""}
+                    onChange={(e) => updateVariable(v.id, "descripcion", e.target.value)}
+                    placeholder="Descripción (opcional)"
+                    rows={2}
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface resize-none"
                   />
                   <div className="flex gap-2">
                     <input
@@ -141,10 +150,13 @@ function StepVariables({ variables, onChange }) {
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-on-surface-variant w-5 text-center">{i + 1}</span>
+                  <span className="text-xs font-bold text-on-surface-variant w-5 text-center flex-shrink-0">{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-primary truncate">{v.nombre}</div>
-                    <div className="text-xs text-on-surface-variant">{v.dimension}</div>
+                    {v.descripcion && (
+                      <div className="text-xs text-on-surface-variant mt-0.5 truncate">{v.descripcion}</div>
+                    )}
+                    <div className="text-xs text-on-surface-variant/60 mt-0.5">{v.dimension}</div>
                   </div>
                   <button onClick={() => setEditingId(v.id)} title="Editar"
                     className="text-on-surface-variant hover:text-primary transition-colors">
@@ -172,6 +184,13 @@ function StepVariables({ variables, onChange }) {
           onKeyDown={(e) => e.key === "Enter" && addVariable()}
           placeholder="Nombre de la variable o ítem..."
           className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+        />
+        <textarea
+          value={newVar.descripcion}
+          onChange={(e) => setNewVar((p) => ({ ...p, descripcion: e.target.value }))}
+          placeholder="Descripción de la variable (opcional)"
+          rows={2}
+          className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface resize-none"
         />
         <div className="flex gap-2">
           <input
