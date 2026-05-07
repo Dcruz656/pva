@@ -154,11 +154,12 @@ function DashboardView({ onNavigate }) {
 
 function HistorialView() {
   const [records, setRecords] = useState([])
-  const [estudios, setEstudios] = useState([])
+  const [estudiosEnRespuestas, setEstudiosEnRespuestas] = useState([]) // solo los que tienen respuestas
   const [loading, setLoading] = useState(true)
   const [filterEstudio, setFilterEstudio] = useState("todos")
   const [filterEstado, setFilterEstado] = useState("todos")
 
+  // Carga inicial: trae respuestas + estudios que realmente tienen respuestas
   useEffect(() => {
     async function load() {
       setLoading(true)
@@ -166,18 +167,53 @@ function HistorialView() {
         supabase.from("respuestas").select("*").order("updated_at", { ascending: false }),
         supabase.from("estudios").select("id, titulo"),
       ])
-      setRecords(resp || [])
-      setEstudios(est || [])
+      const rows = resp || []
+      const estMap = Object.fromEntries((est || []).map((e) => [e.id, e.titulo]))
+
+      // IDs únicos presentes en respuestas
+      const idsPresentes = [...new Set(rows.map((r) => r.estudio_id).filter(Boolean))]
+      const opciones = idsPresentes.map((id) => ({
+        id,
+        titulo: estMap[id] ?? `Evaluación (${id.substring(0, 8)}…)`,
+      }))
+
+      setRecords(rows)
+      setEstudiosEnRespuestas(opciones)
       setLoading(false)
     }
     load()
   }, [])
 
-  const estudioMap = Object.fromEntries(estudios.map((e) => [e.id, e.titulo]))
+  // Vuelve a consultar Supabase cada vez que cambia el filtro de estudio
+  useEffect(() => {
+    if (filterEstudio === "todos") return // ya cargado en init
+    async function refetch() {
+      setLoading(true)
+      let q = supabase.from("respuestas").select("*").eq("estudio_id", filterEstudio).order("updated_at", { ascending: false })
+      const { data } = await q
+      setRecords(data || [])
+      setLoading(false)
+    }
+    refetch()
+  }, [filterEstudio])
 
-  let filtered = records
-  if (filterEstudio !== "todos") filtered = filtered.filter((r) => r.estudio_id === filterEstudio)
-  if (filterEstado !== "todos") filtered = filtered.filter((r) => r.estado === filterEstado)
+  // Cuando vuelven a "todos" recarga todo
+  useEffect(() => {
+    if (filterEstudio !== "todos") return
+    async function reloadAll() {
+      setLoading(true)
+      const { data } = await supabase.from("respuestas").select("*").order("updated_at", { ascending: false })
+      setRecords(data || [])
+      setLoading(false)
+    }
+    reloadAll()
+  }, [filterEstudio])
+
+  const filtered = filterEstado === "todos"
+    ? records
+    : records.filter((r) => r.estado === filterEstado)
+
+  const estudioMap = Object.fromEntries(estudiosEnRespuestas.map((e) => [e.id, e.titulo]))
 
   const filtroLabel = filterEstudio === "todos"
     ? "todos"
@@ -222,14 +258,14 @@ function HistorialView() {
             </button>
           ))}
         </div>
-        {estudios.length > 0 && (
+        {estudiosEnRespuestas.length > 0 && (
           <select
             value={filterEstudio}
             onChange={(e) => setFilterEstudio(e.target.value)}
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-outline-variant bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
           >
             <option value="todos">Todas las evaluaciones</option>
-            {estudios.map((e) => (
+            {estudiosEnRespuestas.map((e) => (
               <option key={e.id} value={e.id}>{e.titulo}</option>
             ))}
           </select>
@@ -384,7 +420,7 @@ export default function App({ onLogout }) {
             <Icon name="school" className="text-on-primary text-3xl" />
           </div>
           <h2 className="font-semibold text-sm text-on-surface text-center">Administración</h2>
-          <p className="text-xs text-on-surface-variant">DCB Platform</p>
+          <p className="text-xs text-on-surface-variant">Validación Académica</p>
         </div>
         <nav className="flex-1 py-4 overflow-y-auto">
           {sidebarItems.map(({ icon, label, viewKey }) => (
