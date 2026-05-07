@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react"
 import { supabase } from "./lib/supabase"
 import CrearEvaluacion from "./views/CrearEvaluacion"
 import MisEvaluaciones from "./views/MisEvaluaciones"
+import { exportarHistorialExcel, exportarHistorialPDF } from "./lib/exportar"
 
 const STUDY_ID = "STUDY-2024-082"
 const DEADLINE = new Date("2026-06-15")
@@ -255,19 +256,6 @@ function HistorialView() {
 
   const filtered = filter === "todos" ? records : records.filter((r) => r.estado === filter)
 
-  function exportCSV() {
-    const headers = ["variable_id", "variable", "dimension", "claridad", "relevancia", "coherencia", "observaciones", "estado", "updated_at"]
-    const rows = filtered.map((r) => headers.map((h) => JSON.stringify(r[h] ?? "")).join(","))
-    const csv = [headers.join(","), ...rows].join("\n")
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `validaciones_${STUDY_ID}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start flex-wrap gap-4">
@@ -275,10 +263,16 @@ function HistorialView() {
           <h2 className="font-bold text-2xl text-primary mb-1">Historial de Revisiones</h2>
           <p className="text-sm text-on-surface-variant">Todos los registros guardados para el estudio {STUDY_ID}</p>
         </div>
-        <button onClick={exportCSV} disabled={filtered.length === 0}
-          className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-secondary-container disabled:opacity-40">
-          <Icon name="download" className="text-base" /> Exportar CSV
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => exportarHistorialExcel(filtered, filter)} disabled={filtered.length === 0}
+            className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-secondary-container disabled:opacity-40">
+            <Icon name="table_view" className="text-base" /> Excel
+          </button>
+          <button onClick={() => exportarHistorialPDF(filtered, filter)} disabled={filtered.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40">
+            <Icon name="picture_as_pdf" className="text-base" /> PDF
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

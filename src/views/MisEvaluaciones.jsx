@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { supabase } from "../lib/supabase"
+import { exportarRespuestasExcel, exportarRespuestasPDF } from "../lib/exportar"
 
 function Icon({ name, className = "" }) {
   return <span className={`material-symbols-outlined leading-none select-none ${className}`}>{name}</span>
@@ -72,6 +73,7 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation }) {
   const [confirm, setConfirm] = useState(null) // { id, action, message }
   const [copiedId, setCopiedId] = useState(null)
   const [copiedLinkId, setCopiedLinkId] = useState(null)
+  const [exportingId, setExportingId] = useState(null) // estudio.id + format
 
   useEffect(() => {
     load()
@@ -128,6 +130,22 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation }) {
 
   function openEvaluation(estudio) {
     window.location.hash = `#/evaluar/${estudio.id}`
+  }
+
+  async function exportar(estudio, formato) {
+    const key = estudio.id + formato
+    setExportingId(key)
+    try {
+      const { data: respuestas } = await supabase
+        .from("respuestas")
+        .select("*")
+        .eq("estudio_id", estudio.id)
+        .order("updated_at", { ascending: false })
+      if (formato === "excel") exportarRespuestasExcel(estudio, respuestas || [])
+      else exportarRespuestasPDF(estudio, respuestas || [])
+    } finally {
+      setExportingId(null)
+    }
   }
 
   return (
@@ -223,6 +241,24 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation }) {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                    <button
+                      onClick={() => exportar(estudio, "excel")}
+                      disabled={exportingId === estudio.id + "excel"}
+                      title="Exportar respuestas a Excel"
+                      className="flex items-center gap-1.5 px-3 py-2 border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container transition-colors disabled:opacity-40"
+                    >
+                      <Icon name="table_view" className="text-base" />
+                      {exportingId === estudio.id + "excel" ? "…" : "Excel"}
+                    </button>
+                    <button
+                      onClick={() => exportar(estudio, "pdf")}
+                      disabled={exportingId === estudio.id + "pdf"}
+                      title="Exportar respuestas a PDF"
+                      className="flex items-center gap-1.5 px-3 py-2 border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container transition-colors disabled:opacity-40"
+                    >
+                      <Icon name="picture_as_pdf" className="text-base" />
+                      {exportingId === estudio.id + "pdf" ? "…" : "PDF"}
+                    </button>
                     <button
                       onClick={() => copyLink(estudio)}
                       title="Copiar enlace para respondientes"
