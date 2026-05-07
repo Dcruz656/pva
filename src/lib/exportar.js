@@ -50,7 +50,7 @@ function pdfHeader(doc, titulo, subtitulo) {
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
-  doc.text("SVA Platform · Sistema de Investigación Académica", 14, 16)
+  doc.text("DCB Platform · Sistema de Investigación Académica", 14, 16)
 
   // Fecha de generación
   doc.setFontSize(7)

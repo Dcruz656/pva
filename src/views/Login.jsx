@@ -129,7 +129,7 @@ export default function Login({ onLogin }) {
         </form>
 
         <p className="text-center text-xs text-slate-400">
-          SVA Platform · Sistema de Validación Académica
+          DCB Platform · Sistema de Validación Académica
         </p>
       </div>
     </div>
