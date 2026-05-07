@@ -441,7 +441,7 @@ export default function App({ onLogout }) {
             className="w-full bg-primary text-on-primary py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-2">
             <Icon name="add" className="text-base" /> Nueva Evaluación
           </button>
-          <a href="mailto:soporte@sva.edu"
+          <a href="mailto:dcruz@uacj.mx"
             className="flex items-center gap-3 text-on-surface-variant px-2 py-2 hover:text-primary text-sm transition-colors">
             <Icon name="contact_support" /> Soporte
           </a>
