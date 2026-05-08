@@ -1346,12 +1346,19 @@ export default function ResponderEvaluacion({ studyId }) {
 
       const { data: submitted } = await supabase
         .from("respuestas")
-        .select("id")
+        .select("variable_id")
         .eq("estudio_id", studyId)
         .eq("session_id", sessionId)
         .eq("estado", "enviado")
-        .limit(1)
-      if (submitted?.length > 0) { setPhase("done"); return }
+      if (submitted?.length > 0) {
+        const criterios = study.criterios_evaluacion || []
+        if (criterios.length > 0) {
+          const submittedIds = new Set(submitted.map((r) => r.variable_id))
+          const allCriteriosDone = criterios.every((c) => submittedIds.has(String(c.id)))
+          if (!allCriteriosDone) { setPhase("criterios_eval"); return }
+        }
+        setPhase("done"); return
+      }
 
       if (study.modo_acceso === "invitacion_codigo") {
         const ok = sessionStorage.getItem(`pva_code_${studyId}`)
