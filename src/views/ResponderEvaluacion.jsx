@@ -13,6 +13,14 @@ const LIKERT = [
   { n: 5, label: "Totalmente de acuerdo",    short: "Muy alto",  color: { border: "border-green-500",  bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500"  } },
 ]
 
+const LIKERT_FACES = [
+  { n: 1, emoji: "😞", label: "Totalmente en desacuerdo", border: "border-red-300",    bg: "bg-red-50",    text: "text-red-600"    },
+  { n: 2, emoji: "🙁", label: "En desacuerdo",            border: "border-orange-300", bg: "bg-orange-50", text: "text-orange-600" },
+  { n: 3, emoji: "😐", label: "Neutral",                  border: "border-amber-300",  bg: "bg-amber-50",  text: "text-amber-600"  },
+  { n: 4, emoji: "🙂", label: "De acuerdo",               border: "border-lime-400",   bg: "bg-lime-50",   text: "text-lime-700"   },
+  { n: 5, emoji: "😄", label: "Totalmente de acuerdo",    border: "border-green-400",  bg: "bg-green-50",  text: "text-green-700"  },
+]
+
 // ── Utilidades ─────────────────────────────────────────────────────────────
 
 function Icon({ name, className = "" }) {
@@ -1100,6 +1108,213 @@ function ScreenForm({ estudio, sessionId, onDone }) {
   )
 }
 
+// ── Pantalla de evaluación de criterios ───────────────────────────────────
+
+function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
+  const criterios = estudio.criterios_evaluacion || []
+  const [ratings, setRatings] = useState(
+    Object.fromEntries(criterios.map((c) => [c.id, null]))
+  )
+  const [submitting, setSubmitting] = useState(false)
+  const [toast, setToast] = useState(null)
+
+  const completedCount = Object.values(ratings).filter(Boolean).length
+  const allComplete = completedCount === criterios.length && criterios.length > 0
+  const progress = criterios.length > 0 ? Math.round((completedCount / criterios.length) * 100) : 100
+
+  function notify(type, msg) {
+    setToast({ type, msg })
+    setTimeout(() => setToast(null), 3500)
+  }
+
+  async function handleSubmit() {
+    setSubmitting(true)
+    try {
+      const rows = criterios.map((c) => ({
+        estudio_id:    estudio.id,
+        session_id:    sessionId,
+        variable_id:   String(c.id),
+        variable:      c.nombre,
+        dimension:     c.variable_nombre || "Criterio de Evaluación",
+        claridad:      ratings[c.id],
+        relevancia:    null,
+        coherencia:    null,
+        observaciones: null,
+        estado:        "enviado",
+      }))
+      const { error } = await supabase
+        .from("respuestas")
+        .upsert(rows, { onConflict: "estudio_id,session_id,variable_id" })
+      if (error) throw error
+      onDone()
+    } catch (err) {
+      notify("error", "No se pudo enviar: " + err.message)
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <EvalLayout progress={progress} title={estudio.titulo}>
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3
+                         rounded-2xl shadow-lg border text-sm font-medium whitespace-nowrap ${
+          toast.type === "success"
+            ? "bg-green-50 border-green-200 text-green-800"
+            : "bg-red-50 border-red-200 text-red-800"
+        }`}>
+          <Icon name={toast.type === "success" ? "check_circle" : "error"} className="text-base" />
+          {toast.msg}
+        </div>
+      )}
+
+      <div className="max-w-2xl mx-auto space-y-6 pb-32">
+
+        {/* Encabezado */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-primary px-6 py-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/60 mb-1">Paso 2 de 2</p>
+            <h2 className="font-bold text-xl text-white">Evaluación de Criterios</h2>
+            <p className="text-sm text-white/70 mt-1">
+              Evalúe cada criterio utilizando la escala de valoración.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 divide-x divide-slate-100">
+            <div className="flex flex-col items-center py-4 gap-1">
+              <Icon name="checklist" className="text-primary text-xl" />
+              <span className="font-bold text-2xl text-slate-800">{criterios.length}</span>
+              <span className="text-xs text-slate-400">criterios</span>
+            </div>
+            <div className="flex flex-col items-center py-4 gap-1">
+              <Icon name={allComplete ? "check_circle" : "pending"} className={`text-xl ${allComplete ? "text-green-500" : "text-primary"}`} />
+              <span className={`font-bold text-2xl ${allComplete ? "text-green-600" : "text-slate-800"}`}>{completedCount}</span>
+              <span className="text-xs text-slate-400">evaluados</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Escala de referencia */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Escala de valoración</p>
+          <div className="flex gap-2">
+            {LIKERT_FACES.map(({ n, emoji, label, border, bg, text }) => (
+              <div key={n} className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 ${border} ${bg}`}>
+                <span className="text-xl leading-none">{emoji}</span>
+                <span className={`text-sm font-bold ${text}`}>{n}</span>
+                <span className={`text-[10px] text-center leading-tight hidden sm:block ${text}`}>
+                  {label.split(" ").slice(0, 2).join(" ")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tarjetas de criterios */}
+        {criterios.map((c, idx) => {
+          const val = ratings[c.id]
+          const selected = val ? LIKERT_FACES[val - 1] : null
+          return (
+            <div
+              key={c.id}
+              className={`bg-white rounded-2xl border-2 shadow-sm transition-all duration-300 ${
+                val ? "border-green-400 shadow-green-100" : "border-slate-200"
+              }`}
+            >
+              {/* Cabecera */}
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-full text-sm font-bold flex items-center justify-center flex-shrink-0 transition-all ${
+                    val ? "bg-green-500 text-white shadow-sm shadow-green-200" : "bg-slate-100 text-slate-500"
+                  }`}>
+                    {val ? <Icon name="check" className="text-sm" /> : <span>{idx + 1}</span>}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 text-sm">{c.nombre}</p>
+                    {c.variable_nombre && (
+                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                        <Icon name="link" className="text-xs" />{c.variable_nombre}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {selected && (
+                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold ${selected.border} ${selected.bg} ${selected.text}`}>
+                    <span className="text-base leading-none">{selected.emoji}</span>
+                    {selected.label}
+                  </div>
+                )}
+              </div>
+
+              {/* Escala */}
+              <div className="px-5 py-4">
+                <div className="grid grid-cols-5 gap-2">
+                  {LIKERT_FACES.map(({ n, emoji, label, border, bg, text }) => {
+                    const isSelected = val === n
+                    return (
+                      <label
+                        key={n}
+                        title={label}
+                        className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
+                          isSelected ? `${border} ${bg}` : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="text-2xl leading-none">{emoji}</span>
+                        <span className={`text-sm font-bold leading-none ${isSelected ? text : "text-slate-400"}`}>{n}</span>
+                        <span className={`text-[10px] text-center leading-tight hidden sm:block ${isSelected ? text : "text-slate-300"}`}>
+                          {label.split(" ").slice(0, 2).join(" ")}
+                        </span>
+                        <input
+                          type="radio"
+                          name={`criterio_${c.id}`}
+                          value={n}
+                          checked={isSelected}
+                          onChange={() => setRatings((prev) => ({ ...prev, [c.id]: n }))}
+                          className="sr-only"
+                        />
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Barra de progreso inferior */}
+              <div className={`h-1.5 rounded-b-2xl ${val ? "bg-green-400" : "bg-slate-100"}`} />
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Barra de acciones fija */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="text-sm hidden sm:block">
+            {allComplete ? (
+              <span className="text-green-600 font-semibold flex items-center gap-1.5">
+                <Icon name="check_circle" className="text-base" /> Todos los criterios evaluados
+              </span>
+            ) : (
+              <span className="text-slate-500">
+                <strong className="text-slate-700">{completedCount}</strong>
+                <span className="text-slate-400">/{criterios.length}</span> evaluados
+              </span>
+            )}
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !allComplete}
+            className="flex-1 sm:flex-none px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm
+                       hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed
+                       flex items-center justify-center gap-2 transition-all shadow-md"
+          >
+            <Icon name="send" className="text-base" />
+            {submitting ? "Enviando…" : allComplete ? "Enviar evaluación" : `Faltan ${criterios.length - completedCount}`}
+          </button>
+        </div>
+      </div>
+    </EvalLayout>
+  )
+}
+
 // ── Entry point ────────────────────────────────────────────────────────────
 
 export default function ResponderEvaluacion({ studyId }) {
@@ -1165,11 +1380,22 @@ export default function ResponderEvaluacion({ studyId }) {
   }
   if (phase === "welcome") return <ScreenWelcome estudio={estudio} onStart={() => setPhase("form")} />
 
+  if (phase === "criterios_eval") return (
+    <ScreenCriteriosEval
+      estudio={estudio}
+      sessionId={sessionId}
+      onDone={() => setPhase("done")}
+    />
+  )
+
   return (
     <ScreenForm
       estudio={estudio}
       sessionId={sessionId}
-      onDone={() => setPhase("done")}
+      onDone={() => {
+        const hasCriterios = estudio.criterios_evaluacion?.length > 0
+        setPhase(hasCriterios ? "criterios_eval" : "done")
+      }}
     />
   )
 }
