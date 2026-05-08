@@ -9,7 +9,7 @@ function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
 }
 
-const STEP_LABELS = ["Información", "Variables", "Criterios", "Acceso", "Publicar"]
+const STEP_LABELS = ["Información", "Variables", "Criterios", "Evaluación Criterios", "Acceso", "Publicar"]
 
 const LIKERT_FACES = [
   { n: 1, emoji: "😞", label: "Totalmente en\ndesacuerdo", color: "border-red-300 bg-red-50 text-red-600" },
@@ -440,7 +440,141 @@ function StepCriterios({ criterios, variables, onChange }) {
   )
 }
 
-// ── Step 4: Tipo de acceso ─────────────────────────────────────────────────
+// ── Step 4: Evaluación Criterios ──────────────────────────────────────────
+function StepEvaluacionCriterios({ evalCriterios, onChange }) {
+  const [newNombre, setNewNombre] = useState("")
+  const [editingId, setEditingId] = useState(null)
+
+  function add() {
+    if (!newNombre.trim()) return
+    onChange([...evalCriterios, { id: Date.now(), nombre: newNombre.trim() }])
+    setNewNombre("")
+  }
+
+  function remove(id) {
+    onChange(evalCriterios.filter((c) => c.id !== id))
+  }
+
+  function update(id, value) {
+    onChange(evalCriterios.map((c) => (c.id === id ? { ...c, nombre: value } : c)))
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* Instrucción */}
+      <div className="flex items-start gap-3 bg-secondary-container rounded-xl px-5 py-4">
+        <Icon name="info" className="text-primary flex-shrink-0 mt-0.5" />
+        <p className="text-sm font-medium text-on-secondary-container leading-relaxed">
+          Define los criterios personalizados que serán evaluados con la escala Likert.
+          Estos criterios aparecerán en el formulario de validación para que los evaluadores los califiquen.
+        </p>
+      </div>
+
+      {/* Escala de Likert con caritas */}
+      <div>
+        <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+          Escala de valoración aplicada
+        </p>
+        <div className="flex gap-2">
+          {LIKERT_FACES.map(({ n, emoji, label, color }) => (
+            <div key={n} className={`flex-1 flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-1 ${color}`}>
+              <span className="text-2xl leading-none">{emoji}</span>
+              <span className="text-sm font-bold leading-none">{n}</span>
+              <span className="text-[10px] font-medium text-center leading-tight hidden sm:block whitespace-pre-line">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Lista de criterios de evaluación */}
+      {evalCriterios.length === 0 ? (
+        <div className="text-center py-10 border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant">
+          <Icon name="checklist" className="text-4xl block mb-2 mx-auto" />
+          <p className="text-sm font-medium">No hay criterios de evaluación.</p>
+          <p className="text-xs mt-1">Agrega los criterios personalizados que deseas evaluar.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {evalCriterios.map((c, i) => (
+            <div key={c.id} className="bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3">
+              {editingId === c.id ? (
+                <div className="flex gap-2">
+                  <input
+                    value={c.nombre}
+                    onChange={(e) => update(c.id, e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && setEditingId(null)}
+                    autoFocus
+                    className="flex-1 border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+                  />
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90"
+                  >
+                    Listo
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
+                    {i + 1}
+                  </div>
+                  <span className="flex-1 text-sm font-semibold text-on-surface">{c.nombre}</span>
+                  {/* Preview de escala */}
+                  <div className="hidden sm:flex gap-1">
+                    {LIKERT_FACES.map(({ n, emoji }) => (
+                      <span key={n} title={`${n}`} className="text-base leading-none opacity-60">{emoji}</span>
+                    ))}
+                  </div>
+                  <button onClick={() => setEditingId(c.id)} title="Editar"
+                    className="text-on-surface-variant hover:text-primary transition-colors">
+                    <Icon name="edit" className="text-base" />
+                  </button>
+                  <button onClick={() => remove(c.id)} title="Eliminar"
+                    className="text-on-surface-variant hover:text-error transition-colors">
+                    <Icon name="delete" className="text-base" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Agregar criterio de evaluación */}
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
+        <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
+          <Icon name="add_circle" className="text-primary text-base" /> Agregar criterio de evaluación
+        </h4>
+        <div className="flex gap-2">
+          <input
+            value={newNombre}
+            onChange={(e) => setNewNombre(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && add()}
+            placeholder="Ej: Aplicabilidad, Pertinencia, Originalidad…"
+            className="flex-1 border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+          />
+          <button
+            onClick={add}
+            disabled={!newNombre.trim()}
+            className="px-4 py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center gap-2"
+          >
+            <Icon name="add" className="text-base" /> Agregar
+          </button>
+        </div>
+      </div>
+
+      <p className="text-xs text-on-surface-variant">
+        {evalCriterios.length > 0
+          ? `${evalCriterios.length} criterio${evalCriterios.length !== 1 ? "s" : ""} de evaluación definido${evalCriterios.length !== 1 ? "s" : ""}.`
+          : "Este paso es opcional. Puedes continuar sin agregar criterios adicionales."
+        }
+      </p>
+    </div>
+  )
+}
+
+// ── Step 5: Tipo de acceso ─────────────────────────────────────────────────
 function StepAcceso({ form, onChange }) {
   return (
     <div className="space-y-6">
@@ -551,7 +685,10 @@ function StepPublicar({ form }) {
               ? new Date(form.fecha_limite + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
               : "Sin fecha límite" },
           { label: "Variables",      value: `${form.variables.length} ítems en ${dims.length} dimensión${dims.length !== 1 ? "es" : ""}` },
-          { label: "Criterios",      value: form.criterios.map((c) => c.nombre).join(", ") },
+          { label: "Criterios",              value: form.criterios.map((c) => c.nombre).join(", ") },
+          { label: "Criterios de evaluación", value: form.criterios_evaluacion.length > 0
+              ? form.criterios_evaluacion.map((c) => c.nombre).join(", ")
+              : "Sin criterios adicionales" },
           { label: "Tipo de acceso", value: form.modo_acceso === "liga_publica" ? "Acceso libre" : "Con código de acceso" },
           ...(form.modo_acceso === "invitacion_codigo"
             ? [{ label: "Código de acceso", value: form.codigo, mono: true }]
@@ -609,9 +746,10 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         instrucciones: estudioToEdit.instrucciones ?? "",
         fecha_inicio:  estudioToEdit.fecha_inicio ? estudioToEdit.fecha_inicio.split("T")[0] : "",
         fecha_limite:  estudioToEdit.fecha_limite ? estudioToEdit.fecha_limite.split("T")[0] : "",
-        variables:     estudioToEdit.variables ?? [],
-        criterios:     estudioToEdit.criterios ?? defaultCriterios,
-        modo_acceso:   estudioToEdit.modo_acceso ?? "liga_publica",
+        variables:           estudioToEdit.variables ?? [],
+        criterios:           estudioToEdit.criterios ?? defaultCriterios,
+        criterios_evaluacion: estudioToEdit.criterios_evaluacion ?? [],
+        modo_acceso:         estudioToEdit.modo_acceso ?? "liga_publica",
         codigo:        estudioToEdit.codigo ?? generateCode(),
       }
     }
@@ -621,9 +759,10 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
       instrucciones: "",
       fecha_inicio:  "",
       fecha_limite:  "",
-      variables:     [],
-      criterios:     defaultCriterios,
-      modo_acceso:   "liga_publica",
+      variables:            [],
+      criterios:            defaultCriterios,
+      criterios_evaluacion: [],
+      modo_acceso:          "liga_publica",
       codigo:        generateCode(),
     }
   })
@@ -646,10 +785,11 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
           instrucciones: form.instrucciones.trim() || null,
           fecha_inicio:  form.fecha_inicio || null,
           fecha_limite:  form.fecha_limite || null,
-          variables:     form.variables,
-          criterios:     form.criterios,
-          modo_acceso:   form.modo_acceso,
-          codigo:        form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
+          variables:            form.variables,
+          criterios:            form.criterios,
+          criterios_evaluacion: form.criterios_evaluacion,
+          modo_acceso:          form.modo_acceso,
+          codigo:               form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
         }).eq("id", estudioToEdit.id)
         setAutoSaved(new Date())
       } catch { /* silent fail */ }
@@ -666,7 +806,8 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
     if (step === 0) return form.titulo.trim().length > 0
     if (step === 1) return form.variables.length > 0
     if (step === 2) return form.criterios.length > 0
-    if (step === 3) return form.modo_acceso === "liga_publica" || form.codigo.trim().length >= 4
+    if (step === 3) return true  // Evaluación Criterios es opcional
+    if (step === 4) return form.modo_acceso === "liga_publica" || form.codigo.trim().length >= 4
     return true
   }
 
@@ -680,11 +821,12 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         instrucciones: form.instrucciones.trim() || null,
         fecha_inicio:  form.fecha_inicio || null,
         fecha_limite:  form.fecha_limite || null,
-        variables:     form.variables,
-        criterios:     form.criterios,
-        modo_acceso:   form.modo_acceso,
-        codigo:        form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
-        estado:        "activo",
+        variables:            form.variables,
+        criterios:            form.criterios,
+        criterios_evaluacion: form.criterios_evaluacion,
+        modo_acceso:          form.modo_acceso,
+        codigo:               form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
+        estado:               "activo",
       }
       const { data, error: err } = isEdit
         ? await supabase.from("estudios").update(payload).eq("id", estudioToEdit.id).select().single()
@@ -754,8 +896,9 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         {step === 0 && <StepInfo form={form} onChange={updateForm} />}
         {step === 1 && <StepVariables variables={form.variables} onChange={(v) => updateForm("variables", v)} />}
         {step === 2 && <StepCriterios criterios={form.criterios} variables={form.variables} onChange={(c) => updateForm("criterios", c)} />}
-        {step === 3 && <StepAcceso form={form} onChange={updateForm} />}
-        {step === 4 && <StepPublicar form={form} />}
+        {step === 3 && <StepEvaluacionCriterios evalCriterios={form.criterios_evaluacion} onChange={(c) => updateForm("criterios_evaluacion", c)} />}
+        {step === 4 && <StepAcceso form={form} onChange={updateForm} />}
+        {step === 5 && <StepPublicar form={form} />}
       </div>
 
       {/* Error */}
