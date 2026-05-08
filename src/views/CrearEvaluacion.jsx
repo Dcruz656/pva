@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { supabase } from "../lib/supabase"
 
 function Icon({ name, className = "" }) {
@@ -548,6 +548,34 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [autoSaved, setAutoSaved] = useState(null)
+  const autoSaveTimer = useRef(null)
+  const isFirstRender = useRef(true)
+
+  // Auto-guardado con debounce de 3 s (solo en modo edición)
+  useEffect(() => {
+    if (!isEdit) return
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    autoSaveTimer.current = setTimeout(async () => {
+      try {
+        await supabase.from("estudios").update({
+          titulo:        form.titulo.trim(),
+          descripcion:   form.descripcion.trim() || null,
+          instrucciones: form.instrucciones.trim() || null,
+          fecha_inicio:  form.fecha_inicio || null,
+          fecha_limite:  form.fecha_limite || null,
+          variables:     form.variables,
+          criterios:     form.criterios,
+          modo_acceso:   form.modo_acceso,
+          codigo:        form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
+        }).eq("id", estudioToEdit.id)
+        setAutoSaved(new Date())
+      } catch { /* silent fail */ }
+    }, 3000)
+    return () => clearTimeout(autoSaveTimer.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form])
 
   function updateForm(field, value) {
     setForm((p) => ({ ...p, [field]: value }))
@@ -596,9 +624,19 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         <button onClick={onBack} className="text-on-surface-variant hover:text-on-surface transition-colors">
           <Icon name="arrow_back" className="text-2xl" />
         </button>
-        <div>
-          <h2 className="font-bold text-2xl text-primary">{isEdit ? "Editar Evaluación" : "Nueva Evaluación"}</h2>
-          <p className="text-sm text-on-surface-variant">{isEdit ? "Modifica los datos del instrumento de validación" : "Diseña un instrumento de validación personalizado"}</p>
+        <div className="flex-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="font-bold text-2xl text-primary">{isEdit ? "Editar Evaluación" : "Nueva Evaluación"}</h2>
+            {isEdit && autoSaved && (
+              <span className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 border border-green-200 rounded-full px-3 py-1">
+                <Icon name="cloud_done" className="text-sm" />
+                Auto-guardado {autoSaved.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-on-surface-variant mt-0.5">
+            {isEdit ? "Modifica los datos del instrumento de validación" : "Diseña un instrumento de validación personalizado"}
+          </p>
         </div>
       </div>
 
