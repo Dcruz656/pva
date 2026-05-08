@@ -299,6 +299,7 @@ function ScreenWelcome({ estudio, onStart }) {
   const variables = estudio.variables || []
   const dims = [...new Set(variables.map((v) => v.dimension))]
   const dl = daysLeft(estudio.fecha_limite)
+  const criterios = estudio.criterios_evaluacion || []
 
   const dimData = dims.map((d) => ({
     name: d,
@@ -420,6 +421,60 @@ function ScreenWelcome({ estudio, onStart }) {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Fases de evaluación */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h3 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
+              <Icon name="route" className="text-primary text-base" />
+              Proceso de evaluación
+            </h3>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {/* Fase 1 */}
+            <div className="flex items-start gap-4 px-5 py-4">
+              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-white text-xs font-bold">1</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-slate-800 text-sm">Evaluación de Variables</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Valore cada variable usando la escala del 1 al 5 en tres criterios: Claridad, Relevancia y Coherencia.
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
+                    {variables.length} variable{variables.length !== 1 ? "s" : ""}
+                  </span>
+                  <span className="text-xs bg-slate-100 text-slate-500 font-medium px-2 py-0.5 rounded-full">
+                    Escala numérica 1–5
+                  </span>
+                </div>
+              </div>
+            </div>
+            {/* Fase 2 — solo si hay criterios */}
+            {criterios.length > 0 && (
+              <div className="flex items-start gap-4 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white text-xs font-bold">2</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-800 text-sm">Evaluación de Criterios</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Evalúe la pertinencia de cada criterio personalizado usando la escala de valoración con emojis.
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">
+                      {criterios.length} criterio{criterios.length !== 1 ? "s" : ""}
+                    </span>
+                    <span className="text-xs bg-slate-100 text-slate-500 font-medium px-2 py-0.5 rounded-full">
+                      Escala de emojis 😞–😄
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -947,6 +1002,26 @@ function ScreenForm({ estudio, sessionId, onDone }) {
         </div>
       )}
 
+      {/* Banner fase 1 */}
+      <div className="mb-4 rounded-2xl overflow-hidden border border-primary/20 shadow-sm">
+        <div className="bg-primary px-5 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">1</span>
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm leading-tight">Fase 1: Evaluación de Variables</p>
+              <p className="text-white/70 text-xs">Valore claridad, relevancia y coherencia de cada variable (escala 1–5)</p>
+            </div>
+          </div>
+          {estudio.criterios_evaluacion?.length > 0 && (
+            <span className="flex-shrink-0 text-xs text-white/60 font-medium bg-white/10 px-2.5 py-1 rounded-full whitespace-nowrap">
+              de 2 fases
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Nav de dimensiones */}
       <div className="sticky top-14 z-30 -mx-4 px-4 py-2 bg-[#f0f4fa]/95 backdrop-blur-sm border-b border-slate-200 mb-6">
         <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
@@ -1170,13 +1245,29 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
 
       <div className="max-w-2xl mx-auto space-y-6 pb-32">
 
-        {/* Encabezado */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-primary px-6 py-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/60 mb-1">Paso 2 de 2</p>
+        {/* Banner de transición — confirma que fase 1 ya fue completada */}
+        <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-3.5">
+          <div className="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Icon name="check" className="text-white text-sm" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-green-800">Fase 1 completada: Evaluación de Variables</p>
+            <p className="text-xs text-green-600">Ahora continúe con la segunda fase.</p>
+          </div>
+        </div>
+
+        {/* Encabezado fase 2 */}
+        <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+          <div className="bg-indigo-600 px-6 py-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-bold">2</span>
+              </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/70">Fase 2 de 2</p>
+            </div>
             <h2 className="font-bold text-xl text-white">Evaluación de Criterios</h2>
             <p className="text-sm text-white/70 mt-1">
-              Evalúe cada criterio utilizando la escala de valoración.
+              Evalúe la pertinencia de cada criterio usando la escala de emojis.
             </p>
           </div>
           <div className="grid grid-cols-2 divide-x divide-slate-100">
