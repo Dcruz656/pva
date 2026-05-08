@@ -227,7 +227,7 @@ function StepVariables({ variables, onChange }) {
 }
 
 // ── Step 3: Criterios de evaluación ───────────────────────────────────────
-function StepCriterios({ criterios, onChange }) {
+function StepCriterios({ criterios, variables, onChange }) {
   const [newNombre, setNewNombre] = useState("")
   const [editingId, setEditingId] = useState(null)
 
@@ -334,6 +334,50 @@ function StepCriterios({ criterios, onChange }) {
         <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
           <Icon name="add_circle" className="text-primary text-base" /> Agregar criterio
         </h4>
+
+        {/* Scroll de variables del paso anterior */}
+        {variables.length > 0 && (
+          <div>
+            <p className="text-xs text-on-surface-variant mb-2 flex items-center gap-1.5">
+              <Icon name="touch_app" className="text-xs" />
+              Selecciona una variable para usarla como criterio:
+            </p>
+            <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+              {variables.map((v) => {
+                const yaAgregado = criterios.some(
+                  (c) => c.nombre.toLowerCase() === v.nombre.toLowerCase()
+                )
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    disabled={yaAgregado}
+                    onClick={() => setNewNombre(v.nombre)}
+                    className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg border text-sm transition-all ${
+                      yaAgregado
+                        ? "border-green-200 bg-green-50 text-green-700 opacity-60 cursor-not-allowed"
+                        : newNombre === v.nombre
+                        ? "border-primary bg-secondary-container text-primary font-semibold"
+                        : "border-outline-variant bg-surface hover:border-primary hover:bg-surface-container-low text-on-surface"
+                    }`}
+                  >
+                    <Icon
+                      name={yaAgregado ? "check_circle" : "radio_button_unchecked"}
+                      className="text-base flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="truncate block">{v.nombre}</span>
+                      {v.dimension && (
+                        <span className="text-xs text-on-surface-variant font-normal">{v.dimension}</span>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <input
             value={newNombre}
@@ -672,7 +716,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 min-h-[300px]">
         {step === 0 && <StepInfo form={form} onChange={updateForm} />}
         {step === 1 && <StepVariables variables={form.variables} onChange={(v) => updateForm("variables", v)} />}
-        {step === 2 && <StepCriterios criterios={form.criterios} onChange={(c) => updateForm("criterios", c)} />}
+        {step === 2 && <StepCriterios criterios={form.criterios} variables={form.variables} onChange={(c) => updateForm("criterios", c)} />}
         {step === 3 && <StepAcceso form={form} onChange={updateForm} />}
         {step === 4 && <StepPublicar form={form} />}
       </div>
