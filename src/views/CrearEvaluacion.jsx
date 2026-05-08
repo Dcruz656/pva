@@ -229,20 +229,28 @@ function StepVariables({ variables, onChange }) {
 // ── Step 3: Criterios de evaluación ───────────────────────────────────────
 function StepCriterios({ criterios, variables, onChange }) {
   const [newNombre, setNewNombre] = useState("")
+  const [newVariableId, setNewVariableId] = useState(null)
   const [editingId, setEditingId] = useState(null)
 
   function addCriterio() {
     if (!newNombre.trim()) return
-    onChange([...criterios, { id: Date.now(), nombre: newNombre.trim() }])
+    const variable = variables.find((v) => v.id === newVariableId)
+    onChange([...criterios, {
+      id:              Date.now(),
+      nombre:          newNombre.trim(),
+      variable_id:     newVariableId ?? null,
+      variable_nombre: variable?.nombre ?? null,
+    }])
     setNewNombre("")
+    setNewVariableId(null)
   }
 
   function removeCriterio(id) {
     onChange(criterios.filter((c) => c.id !== id))
   }
 
-  function updateNombre(id, value) {
-    onChange(criterios.map((c) => (c.id === id ? { ...c, nombre: value } : c)))
+  function updateCriterio(id, field, value) {
+    onChange(criterios.map((c) => (c.id === id ? { ...c, [field]: value } : c)))
   }
 
   return (
@@ -263,21 +271,16 @@ function StepCriterios({ criterios, variables, onChange }) {
         </p>
         <div className="flex gap-2">
           {LIKERT_FACES.map(({ n, emoji, label, color }) => (
-            <div
-              key={n}
-              className={`flex-1 flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-1 ${color}`}
-            >
+            <div key={n} className={`flex-1 flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-1 ${color}`}>
               <span className="text-2xl leading-none">{emoji}</span>
               <span className="text-sm font-bold leading-none">{n}</span>
-              <span className="text-[10px] font-medium text-center leading-tight hidden sm:block whitespace-pre-line">
-                {label}
-              </span>
+              <span className="text-[10px] font-medium text-center leading-tight hidden sm:block whitespace-pre-line">{label}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Lista de criterios */}
+      {/* Lista de criterios ya agregados */}
       {criterios.length === 0 ? (
         <div className="text-center py-8 border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant">
           <Icon name="rule" className="text-4xl block mb-2 mx-auto" />
@@ -288,38 +291,59 @@ function StepCriterios({ criterios, variables, onChange }) {
           {criterios.map((c, i) => (
             <div key={c.id} className="bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3">
               {editingId === c.id ? (
-                <div className="flex gap-2">
+                <div className="space-y-2">
                   <input
                     value={c.nombre}
-                    onChange={(e) => updateNombre(c.id, e.target.value)}
+                    onChange={(e) => updateCriterio(c.id, "nombre", e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && setEditingId(null)}
                     autoFocus
-                    className="flex-1 border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+                    placeholder="Nombre del criterio"
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
                   />
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90"
-                  >
-                    Listo
-                  </button>
+                  {variables.length > 0 && (
+                    <select
+                      value={c.variable_id ?? ""}
+                      onChange={(e) => {
+                        const v = variables.find((v) => String(v.id) === e.target.value)
+                        updateCriterio(c.id, "variable_id", v?.id ?? null)
+                        updateCriterio(c.id, "variable_nombre", v?.nombre ?? null)
+                      }}
+                      className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+                    >
+                      <option value="">— Sin variable asociada —</option>
+                      {variables.map((v) => (
+                        <option key={v.id} value={v.id}>{v.nombre}</option>
+                      ))}
+                    </select>
+                  )}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90"
+                    >
+                      Listo
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-on-surface-variant w-5 text-center flex-shrink-0">{i + 1}</span>
-                  <span className="flex-1 text-sm font-semibold text-on-surface">{c.nombre}</span>
-                  <button
-                    onClick={() => setEditingId(c.id)}
-                    title="Editar"
-                    className="text-on-surface-variant hover:text-primary transition-colors"
-                  >
+                <div className="flex items-start gap-3">
+                  <span className="text-xs font-bold text-on-surface-variant w-5 text-center flex-shrink-0 mt-1">{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-on-surface block">{c.nombre}</span>
+                    {c.variable_nombre && (
+                      <span className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
+                        <Icon name="link" className="text-xs" />
+                        {c.variable_nombre}
+                      </span>
+                    )}
+                  </div>
+                  <button onClick={() => setEditingId(c.id)} title="Editar"
+                    className="text-on-surface-variant hover:text-primary transition-colors flex-shrink-0">
                     <Icon name="edit" className="text-base" />
                   </button>
-                  <button
-                    onClick={() => removeCriterio(c.id)}
-                    title="Eliminar"
+                  <button onClick={() => removeCriterio(c.id)} title="Eliminar"
                     disabled={criterios.length <= 1}
-                    className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-30"
-                  >
+                    className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-30 flex-shrink-0">
                     <Icon name="delete" className="text-base" />
                   </button>
                 </div>
@@ -329,46 +353,68 @@ function StepCriterios({ criterios, variables, onChange }) {
         </div>
       )}
 
-      {/* Agregar criterio */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
+      {/* Formulario agregar criterio */}
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-4">
         <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
           <Icon name="add_circle" className="text-primary text-base" /> Agregar criterio
         </h4>
 
-        {/* Scroll de variables del paso anterior */}
+        {/* Nombre del criterio */}
+        <div>
+          <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide block mb-1.5">
+            Nombre del criterio
+          </label>
+          <input
+            value={newNombre}
+            onChange={(e) => setNewNombre(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addCriterio()}
+            placeholder="Ej: Claridad, Relevancia, Coherencia…"
+            className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+          />
+        </div>
+
+        {/* Selector de variable asociada */}
         {variables.length > 0 && (
           <div>
-            <p className="text-xs text-on-surface-variant mb-2 flex items-center gap-1.5">
-              <Icon name="touch_app" className="text-xs" />
-              Selecciona una variable para usarla como criterio:
-            </p>
-            <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide block mb-1.5">
+              Variable asociada
+            </label>
+            <div className="max-h-44 overflow-y-auto space-y-1 border border-outline-variant rounded-lg p-2 bg-surface">
+              {/* Opción ninguna */}
+              <button
+                type="button"
+                onClick={() => setNewVariableId(null)}
+                className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                  newVariableId === null
+                    ? "bg-surface-container text-on-surface-variant font-medium"
+                    : "hover:bg-surface-container-low text-on-surface-variant"
+                }`}
+              >
+                <Icon name={newVariableId === null ? "radio_button_checked" : "radio_button_unchecked"} className="text-base flex-shrink-0" />
+                <span className="italic">Sin variable asociada</span>
+              </button>
+
               {variables.map((v) => {
-                const yaAgregado = criterios.some(
-                  (c) => c.nombre.toLowerCase() === v.nombre.toLowerCase()
-                )
+                const selected = newVariableId === v.id
                 return (
                   <button
                     key={v.id}
                     type="button"
-                    disabled={yaAgregado}
-                    onClick={() => setNewNombre(v.nombre)}
+                    onClick={() => setNewVariableId(v.id)}
                     className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg border text-sm transition-all ${
-                      yaAgregado
-                        ? "border-green-200 bg-green-50 text-green-700 opacity-60 cursor-not-allowed"
-                        : newNombre === v.nombre
+                      selected
                         ? "border-primary bg-secondary-container text-primary font-semibold"
-                        : "border-outline-variant bg-surface hover:border-primary hover:bg-surface-container-low text-on-surface"
+                        : "border-transparent hover:border-outline-variant hover:bg-surface-container-low text-on-surface"
                     }`}
                   >
                     <Icon
-                      name={yaAgregado ? "check_circle" : "radio_button_unchecked"}
-                      className="text-base flex-shrink-0"
+                      name={selected ? "radio_button_checked" : "radio_button_unchecked"}
+                      className={`text-base flex-shrink-0 ${selected ? "text-primary" : "text-on-surface-variant"}`}
                     />
                     <div className="min-w-0 flex-1">
                       <span className="truncate block">{v.nombre}</span>
                       {v.dimension && (
-                        <span className="text-xs text-on-surface-variant font-normal">{v.dimension}</span>
+                        <span className="text-[11px] text-on-surface-variant font-normal">{v.dimension}</span>
                       )}
                     </div>
                   </button>
@@ -378,22 +424,13 @@ function StepCriterios({ criterios, variables, onChange }) {
           </div>
         )}
 
-        <div className="flex gap-2">
-          <input
-            value={newNombre}
-            onChange={(e) => setNewNombre(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addCriterio()}
-            placeholder="Nombre del criterio (Ej: Claridad, Relevancia…)"
-            className="flex-1 border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-          />
-          <button
-            onClick={addCriterio}
-            disabled={!newNombre.trim()}
-            className="px-4 py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center gap-2"
-          >
-            <Icon name="add" className="text-base" /> Agregar
-          </button>
-        </div>
+        <button
+          onClick={addCriterio}
+          disabled={!newNombre.trim()}
+          className="w-full py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2"
+        >
+          <Icon name="add" className="text-base" /> Agregar criterio
+        </button>
       </div>
 
       <p className="text-xs text-on-surface-variant">
