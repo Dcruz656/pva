@@ -441,22 +441,30 @@ function StepCriterios({ criterios, variables, onChange }) {
 }
 
 // ── Step 4: Evaluación Criterios ──────────────────────────────────────────
-function StepEvaluacionCriterios({ evalCriterios, onChange }) {
+function StepEvaluacionCriterios({ evalCriterios, variables, onChange }) {
   const [newNombre, setNewNombre] = useState("")
+  const [newVariableId, setNewVariableId] = useState(null)
   const [editingId, setEditingId] = useState(null)
 
   function add() {
     if (!newNombre.trim()) return
-    onChange([...evalCriterios, { id: Date.now(), nombre: newNombre.trim() }])
+    const variable = variables.find((v) => v.id === newVariableId)
+    onChange([...evalCriterios, {
+      id:              Date.now(),
+      nombre:          newNombre.trim(),
+      variable_id:     newVariableId ?? null,
+      variable_nombre: variable?.nombre ?? null,
+    }])
     setNewNombre("")
+    setNewVariableId(null)
   }
 
   function remove(id) {
     onChange(evalCriterios.filter((c) => c.id !== id))
   }
 
-  function update(id, value) {
-    onChange(evalCriterios.map((c) => (c.id === id ? { ...c, nombre: value } : c)))
+  function updateCriterio(id, field, value) {
+    onChange(evalCriterios.map((c) => (c.id === id ? { ...c, [field]: value } : c)))
   }
 
   return (
@@ -499,39 +507,63 @@ function StepEvaluacionCriterios({ evalCriterios, onChange }) {
           {evalCriterios.map((c, i) => (
             <div key={c.id} className="bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3">
               {editingId === c.id ? (
-                <div className="flex gap-2">
+                <div className="space-y-2">
                   <input
                     value={c.nombre}
-                    onChange={(e) => update(c.id, e.target.value)}
+                    onChange={(e) => updateCriterio(c.id, "nombre", e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && setEditingId(null)}
                     autoFocus
-                    className="flex-1 border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+                    placeholder="Nombre del criterio"
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
                   />
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90"
-                  >
-                    Listo
-                  </button>
+                  {variables.length > 0 && (
+                    <select
+                      value={c.variable_id ?? ""}
+                      onChange={(e) => {
+                        const v = variables.find((v) => String(v.id) === e.target.value)
+                        updateCriterio(c.id, "variable_id", v?.id ?? null)
+                        updateCriterio(c.id, "variable_nombre", v?.nombre ?? null)
+                      }}
+                      className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+                    >
+                      <option value="">— Sin variable asociada —</option>
+                      {variables.map((v) => (
+                        <option key={v.id} value={v.id}>{v.nombre}</option>
+                      ))}
+                    </select>
+                  )}
+                  <div className="flex justify-end">
+                    <button onClick={() => setEditingId(null)}
+                      className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90">
+                      Listo
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                     {i + 1}
                   </div>
-                  <span className="flex-1 text-sm font-semibold text-on-surface">{c.nombre}</span>
-                  {/* Preview de escala */}
-                  <div className="hidden sm:flex gap-1">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-on-surface block">{c.nombre}</span>
+                    {c.variable_nombre && (
+                      <span className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
+                        <Icon name="link" className="text-xs" />
+                        {c.variable_nombre}
+                      </span>
+                    )}
+                  </div>
+                  <div className="hidden sm:flex gap-1 flex-shrink-0">
                     {LIKERT_FACES.map(({ n, emoji }) => (
-                      <span key={n} title={`${n}`} className="text-base leading-none opacity-60">{emoji}</span>
+                      <span key={n} className="text-base leading-none opacity-60">{emoji}</span>
                     ))}
                   </div>
                   <button onClick={() => setEditingId(c.id)} title="Editar"
-                    className="text-on-surface-variant hover:text-primary transition-colors">
+                    className="text-on-surface-variant hover:text-primary transition-colors flex-shrink-0">
                     <Icon name="edit" className="text-base" />
                   </button>
                   <button onClick={() => remove(c.id)} title="Eliminar"
-                    className="text-on-surface-variant hover:text-error transition-colors">
+                    className="text-on-surface-variant hover:text-error transition-colors flex-shrink-0">
                     <Icon name="delete" className="text-base" />
                   </button>
                 </div>
@@ -542,26 +574,81 @@ function StepEvaluacionCriterios({ evalCriterios, onChange }) {
       )}
 
       {/* Agregar criterio de evaluación */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-4">
         <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
           <Icon name="add_circle" className="text-primary text-base" /> Agregar criterio de evaluación
         </h4>
-        <div className="flex gap-2">
+
+        {/* Nombre */}
+        <div>
+          <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide block mb-1.5">
+            Nombre del criterio
+          </label>
           <input
             value={newNombre}
             onChange={(e) => setNewNombre(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
             placeholder="Ej: Aplicabilidad, Pertinencia, Originalidad…"
-            className="flex-1 border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+            className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
           />
-          <button
-            onClick={add}
-            disabled={!newNombre.trim()}
-            className="px-4 py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center gap-2"
-          >
-            <Icon name="add" className="text-base" /> Agregar
-          </button>
         </div>
+
+        {/* Selector de variable asociada */}
+        {variables.length > 0 && (
+          <div>
+            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide block mb-1.5">
+              Variable asociada
+            </label>
+            <div className="max-h-44 overflow-y-auto space-y-1 border border-outline-variant rounded-lg p-2 bg-surface">
+              <button
+                type="button"
+                onClick={() => setNewVariableId(null)}
+                className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                  newVariableId === null
+                    ? "bg-surface-container text-on-surface-variant font-medium"
+                    : "hover:bg-surface-container-low text-on-surface-variant"
+                }`}
+              >
+                <Icon name={newVariableId === null ? "radio_button_checked" : "radio_button_unchecked"} className="text-base flex-shrink-0" />
+                <span className="italic">Sin variable asociada</span>
+              </button>
+              {variables.map((v) => {
+                const selected = newVariableId === v.id
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setNewVariableId(v.id)}
+                    className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg border text-sm transition-all ${
+                      selected
+                        ? "border-primary bg-secondary-container text-primary font-semibold"
+                        : "border-transparent hover:border-outline-variant hover:bg-surface-container-low text-on-surface"
+                    }`}
+                  >
+                    <Icon
+                      name={selected ? "radio_button_checked" : "radio_button_unchecked"}
+                      className={`text-base flex-shrink-0 ${selected ? "text-primary" : "text-on-surface-variant"}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="truncate block">{v.nombre}</span>
+                      {v.dimension && (
+                        <span className="text-[11px] text-on-surface-variant font-normal">{v.dimension}</span>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={add}
+          disabled={!newNombre.trim()}
+          className="w-full py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2"
+        >
+          <Icon name="add" className="text-base" /> Agregar criterio
+        </button>
       </div>
 
       <p className="text-xs text-on-surface-variant">
@@ -896,7 +983,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         {step === 0 && <StepInfo form={form} onChange={updateForm} />}
         {step === 1 && <StepVariables variables={form.variables} onChange={(v) => updateForm("variables", v)} />}
         {step === 2 && <StepCriterios criterios={form.criterios} variables={form.variables} onChange={(c) => updateForm("criterios", c)} />}
-        {step === 3 && <StepEvaluacionCriterios evalCriterios={form.criterios_evaluacion} onChange={(c) => updateForm("criterios_evaluacion", c)} />}
+        {step === 3 && <StepEvaluacionCriterios evalCriterios={form.criterios_evaluacion} variables={form.variables} onChange={(c) => updateForm("criterios_evaluacion", c)} />}
         {step === 4 && <StepAcceso form={form} onChange={updateForm} />}
         {step === 5 && <StepPublicar form={form} />}
       </div>
