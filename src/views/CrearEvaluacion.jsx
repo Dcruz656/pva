@@ -9,7 +9,15 @@ function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
 }
 
-const STEP_LABELS = ["Información", "Variables", "Acceso", "Publicar"]
+const STEP_LABELS = ["Información", "Variables", "Criterios", "Acceso", "Publicar"]
+
+const LIKERT_FACES = [
+  { n: 1, emoji: "😞", label: "Totalmente en\ndesacuerdo", color: "border-red-300 bg-red-50 text-red-600" },
+  { n: 2, emoji: "🙁", label: "En\ndesacuerdo",           color: "border-orange-300 bg-orange-50 text-orange-600" },
+  { n: 3, emoji: "😐", label: "Neutral",                  color: "border-amber-300 bg-amber-50 text-amber-600" },
+  { n: 4, emoji: "🙂", label: "De\nacuerdo",              color: "border-lime-400 bg-lime-50 text-lime-700" },
+  { n: 5, emoji: "😄", label: "Totalmente de\nacuerdo",   color: "border-green-400 bg-green-50 text-green-700" },
+]
 
 // ── Step 1: Información básica ─────────────────────────────────────────────
 function StepInfo({ form, onChange }) {
@@ -218,7 +226,140 @@ function StepVariables({ variables, onChange }) {
   )
 }
 
-// ── Step 3: Tipo de acceso ─────────────────────────────────────────────────
+// ── Step 3: Criterios de evaluación ───────────────────────────────────────
+function StepCriterios({ criterios, onChange }) {
+  const [newNombre, setNewNombre] = useState("")
+  const [editingId, setEditingId] = useState(null)
+
+  function addCriterio() {
+    if (!newNombre.trim()) return
+    onChange([...criterios, { id: Date.now(), nombre: newNombre.trim() }])
+    setNewNombre("")
+  }
+
+  function removeCriterio(id) {
+    onChange(criterios.filter((c) => c.id !== id))
+  }
+
+  function updateNombre(id, value) {
+    onChange(criterios.map((c) => (c.id === id ? { ...c, nombre: value } : c)))
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* Instrucción */}
+      <div className="flex items-start gap-3 bg-secondary-container rounded-xl px-5 py-4">
+        <Icon name="info" className="text-primary flex-shrink-0 mt-0.5" />
+        <p className="text-sm font-medium text-on-secondary-container leading-relaxed">
+          Evalúe la pertinencia del criterio para explicar la variable.
+        </p>
+      </div>
+
+      {/* Escala de Likert con caritas */}
+      <div>
+        <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+          Escala de valoración aplicada
+        </p>
+        <div className="flex gap-2">
+          {LIKERT_FACES.map(({ n, emoji, label, color }) => (
+            <div
+              key={n}
+              className={`flex-1 flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-1 ${color}`}
+            >
+              <span className="text-2xl leading-none">{emoji}</span>
+              <span className="text-sm font-bold leading-none">{n}</span>
+              <span className="text-[10px] font-medium text-center leading-tight hidden sm:block whitespace-pre-line">
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Lista de criterios */}
+      {criterios.length === 0 ? (
+        <div className="text-center py-8 border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant">
+          <Icon name="rule" className="text-4xl block mb-2 mx-auto" />
+          <p className="text-sm">No hay criterios. Agrega el primero abajo.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {criterios.map((c, i) => (
+            <div key={c.id} className="bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3">
+              {editingId === c.id ? (
+                <div className="flex gap-2">
+                  <input
+                    value={c.nombre}
+                    onChange={(e) => updateNombre(c.id, e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && setEditingId(null)}
+                    autoFocus
+                    className="flex-1 border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+                  />
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90"
+                  >
+                    Listo
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-on-surface-variant w-5 text-center flex-shrink-0">{i + 1}</span>
+                  <span className="flex-1 text-sm font-semibold text-on-surface">{c.nombre}</span>
+                  <button
+                    onClick={() => setEditingId(c.id)}
+                    title="Editar"
+                    className="text-on-surface-variant hover:text-primary transition-colors"
+                  >
+                    <Icon name="edit" className="text-base" />
+                  </button>
+                  <button
+                    onClick={() => removeCriterio(c.id)}
+                    title="Eliminar"
+                    disabled={criterios.length <= 1}
+                    className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-30"
+                  >
+                    <Icon name="delete" className="text-base" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Agregar criterio */}
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
+        <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
+          <Icon name="add_circle" className="text-primary text-base" /> Agregar criterio
+        </h4>
+        <div className="flex gap-2">
+          <input
+            value={newNombre}
+            onChange={(e) => setNewNombre(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addCriterio()}
+            placeholder="Nombre del criterio (Ej: Claridad, Relevancia…)"
+            className="flex-1 border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
+          />
+          <button
+            onClick={addCriterio}
+            disabled={!newNombre.trim()}
+            className="px-4 py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center gap-2"
+          >
+            <Icon name="add" className="text-base" /> Agregar
+          </button>
+        </div>
+      </div>
+
+      <p className="text-xs text-on-surface-variant">
+        {criterios.length} criterio{criterios.length !== 1 ? "s" : ""} definido{criterios.length !== 1 ? "s" : ""}. Mínimo 1 para continuar.
+      </p>
+    </div>
+  )
+}
+
+// ── Step 4: Tipo de acceso ─────────────────────────────────────────────────
 function StepAcceso({ form, onChange }) {
   return (
     <div className="space-y-6">
@@ -329,6 +470,7 @@ function StepPublicar({ form }) {
               ? new Date(form.fecha_limite + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
               : "Sin fecha límite" },
           { label: "Variables",      value: `${form.variables.length} ítems en ${dims.length} dimensión${dims.length !== 1 ? "es" : ""}` },
+          { label: "Criterios",      value: form.criterios.map((c) => c.nombre).join(", ") },
           { label: "Tipo de acceso", value: form.modo_acceso === "liga_publica" ? "Acceso libre" : "Con código de acceso" },
           ...(form.modo_acceso === "invitacion_codigo"
             ? [{ label: "Código de acceso", value: form.codigo, mono: true }]
@@ -374,6 +516,11 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
   const isEdit = Boolean(estudioToEdit)
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(() => {
+    const defaultCriterios = [
+      { id: 1, nombre: "Claridad" },
+      { id: 2, nombre: "Relevancia" },
+      { id: 3, nombre: "Coherencia" },
+    ]
     if (estudioToEdit) {
       return {
         titulo:        estudioToEdit.titulo ?? "",
@@ -382,6 +529,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         fecha_inicio:  estudioToEdit.fecha_inicio ? estudioToEdit.fecha_inicio.split("T")[0] : "",
         fecha_limite:  estudioToEdit.fecha_limite ? estudioToEdit.fecha_limite.split("T")[0] : "",
         variables:     estudioToEdit.variables ?? [],
+        criterios:     estudioToEdit.criterios ?? defaultCriterios,
         modo_acceso:   estudioToEdit.modo_acceso ?? "liga_publica",
         codigo:        estudioToEdit.codigo ?? generateCode(),
       }
@@ -393,6 +541,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
       fecha_inicio:  "",
       fecha_limite:  "",
       variables:     [],
+      criterios:     defaultCriterios,
       modo_acceso:   "liga_publica",
       codigo:        generateCode(),
     }
@@ -407,7 +556,8 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
   function canAdvance() {
     if (step === 0) return form.titulo.trim().length > 0
     if (step === 1) return form.variables.length > 0
-    if (step === 2) return form.modo_acceso === "liga_publica" || form.codigo.trim().length >= 4
+    if (step === 2) return form.criterios.length > 0
+    if (step === 3) return form.modo_acceso === "liga_publica" || form.codigo.trim().length >= 4
     return true
   }
 
@@ -422,6 +572,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         fecha_inicio:  form.fecha_inicio || null,
         fecha_limite:  form.fecha_limite || null,
         variables:     form.variables,
+        criterios:     form.criterios,
         modo_acceso:   form.modo_acceso,
         codigo:        form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
         estado:        "activo",
@@ -483,8 +634,9 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 min-h-[300px]">
         {step === 0 && <StepInfo form={form} onChange={updateForm} />}
         {step === 1 && <StepVariables variables={form.variables} onChange={(v) => updateForm("variables", v)} />}
-        {step === 2 && <StepAcceso form={form} onChange={updateForm} />}
-        {step === 3 && <StepPublicar form={form} />}
+        {step === 2 && <StepCriterios criterios={form.criterios} onChange={(c) => updateForm("criterios", c)} />}
+        {step === 3 && <StepAcceso form={form} onChange={updateForm} />}
+        {step === 4 && <StepPublicar form={form} />}
       </div>
 
       {/* Error */}
