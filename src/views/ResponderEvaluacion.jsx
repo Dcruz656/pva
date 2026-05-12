@@ -4,6 +4,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react"
 import { supabase } from "../lib/supabase"
+import { findVarData } from "../lib/variablesData"
 
 const LIKERT = [
   { n: 1, label: "Totalmente en desacuerdo", short: "Muy bajo",  color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",   dot: "bg-red-400"   } },
@@ -1409,6 +1410,27 @@ export default function ResponderEvaluacion({ studyId }) {
         .single()
 
       if (error || !study) { setPhase("error"); return }
+
+      // Si criterios_evaluacion está vacío pero las variables tienen criterios en el catálogo,
+      // los calcula al vuelo para no depender de que el admin re-guarde el estudio.
+      if (!study.criterios_evaluacion?.length && study.variables?.length) {
+        const computed = []
+        for (const v of study.variables) {
+          const catVar = findVarData(v.clave)
+          if (!catVar?.criterios?.length) continue
+          for (const nombre of catVar.criterios) {
+            computed.push({
+              id:              `${v.clave}__${nombre}`,
+              nombre,
+              variable_id:     v.clave,
+              variable_nombre: v.nombre,
+              dimension:       v.dimension,
+            })
+          }
+        }
+        if (computed.length) study.criterios_evaluacion = computed
+      }
+
       setEstudio(study)
 
       if (study.estado === "cerrado") { setPhase("closed"); return }
