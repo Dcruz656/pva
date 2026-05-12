@@ -1387,9 +1387,25 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
 
 // ── Entry point ────────────────────────────────────────────────────────────
 
+function getCriteriosEval(estudio) {
+  if (estudio.criterios_evaluacion?.length > 0) return estudio.criterios_evaluacion
+  if (!estudio.variables?.length) return []
+  const result = []
+  for (const v of estudio.variables) {
+    const clave = v.clave || v.nombre?.match(/^([A-Z]+\d+)\./)?.[1]
+    const catVar = findVarData(clave)
+    if (!catVar?.criterios?.length) continue
+    for (const nombre of catVar.criterios) {
+      result.push({ id: `${clave}__${nombre}`, nombre, variable_id: clave, variable_nombre: v.nombre, dimension: v.dimension })
+    }
+  }
+  return result
+}
+
 export default function ResponderEvaluacion({ studyId }) {
   const [phase, setPhase] = useState("loading")
   const [estudio, setEstudio] = useState(null)
+  const estudioRef = useRef(null)
 
   const sessionId = useState(() => {
     const key = `pva_session_${studyId}`
@@ -1411,28 +1427,7 @@ export default function ResponderEvaluacion({ studyId }) {
 
       if (error || !study) { setPhase("error"); return }
 
-      // Si criterios_evaluacion está vacío pero las variables tienen criterios en el catálogo,
-      // los calcula al vuelo para no depender de que el admin re-guarde el estudio.
-      if (!study.criterios_evaluacion?.length && study.variables?.length) {
-        const computed = []
-        for (const v of study.variables) {
-          // Usa clave directa; si no existe la extrae del nombre (ej: "EX1. Integración..." → "EX1")
-          const clave = v.clave || v.nombre?.match(/^([A-Z]+\d+)\./)?.[1]
-          const catVar = findVarData(clave)
-          if (!catVar?.criterios?.length) continue
-          for (const nombre of catVar.criterios) {
-            computed.push({
-              id:              `${clave}__${nombre}`,
-              nombre,
-              variable_id:     clave,
-              variable_nombre: v.nombre,
-              dimension:       v.dimension,
-            })
-          }
-        }
-        if (computed.length) study.criterios_evaluacion = computed
-      }
-
+      estudioRef.current = study
       setEstudio(study)
 
       if (study.estado === "cerrado") { setPhase("closed"); return }
@@ -1493,8 +1488,15 @@ export default function ResponderEvaluacion({ studyId }) {
       estudio={estudio}
       sessionId={sessionId}
       onDone={() => {
-        const hasCriterios = estudio.criterios_evaluacion?.length > 0
-        setPhase(hasCriterios ? "criterios_eval" : "done")
+        const criterios = getCriteriosEval(estudioRef.current || estudio)
+        if (criterios.length > 0) {
+          // Asegura que estudio tenga los criterios antes de mostrar la etapa 2
+          estudioRef.current = { ...estudioRef.current, criterios_evaluacion: criterios }
+          setEstudio(estudioRef.current)
+          setPhase("criterios_eval")
+        } else {
+          setPhase("done")
+        }
       }}
     />
   )
