@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { supabase } from "../lib/supabase"
-import { DIMENSION_PRINCIPAL, SUBDIMENSIONES } from "../lib/variablesData"
+import { DIMENSION_PRINCIPAL, SUBDIMENSIONES, findVarData } from "../lib/variablesData"
 
 function Icon({ name, className = "" }) {
   return <span className={`material-symbols-outlined leading-none select-none ${className}`}>{name}</span>
@@ -413,222 +413,180 @@ function StepCriterios({ criterios, onChange }) {
   )
 }
 
-// ── Step 4: Evaluación Criterios ──────────────────────────────────────────
+// ── Step 4: Evaluación Criterios (auto-poblado desde variables seleccionadas) ─
 function StepEvaluacionCriterios({ evalCriterios, variables, onChange }) {
-  const [newNombre, setNewNombre] = useState("")
-  const [newVariableId, setNewVariableId] = useState(null)
-  const [editingId, setEditingId] = useState(null)
 
-  function add() {
-    if (!newNombre.trim()) return
-    const variable = variables.find((v) => v.id === newVariableId)
-    onChange([...evalCriterios, {
-      id:              Date.now(),
-      nombre:          newNombre.trim(),
-      variable_id:     newVariableId ?? null,
-      variable_nombre: variable?.nombre ?? null,
-    }])
-    setNewNombre("")
-    setNewVariableId(null)
+  // Construye el catálogo completo de criterios a partir de las variables seleccionadas
+  const allCriterios = useMemo(() => {
+    const result = []
+    for (const v of variables) {
+      const catVar = findVarData(v.clave)
+      if (!catVar?.criterios?.length) continue
+      for (const nombre of catVar.criterios) {
+        result.push({
+          id:              `${v.clave}__${nombre}`,
+          nombre,
+          variable_id:     v.clave,
+          variable_nombre: v.nombre,
+          dimension:       v.dimension,
+        })
+      }
+    }
+    return result
+  }, [variables])
+
+  // Inicializa con todos seleccionados si aún no hay nada
+  useEffect(() => {
+    if (evalCriterios.length === 0 && allCriterios.length > 0) {
+      onChange(allCriterios)
+    }
+  }, [allCriterios]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selectedIds = useMemo(() => new Set(evalCriterios.map((c) => c.id)), [evalCriterios])
+
+  function toggle(criterio) {
+    if (selectedIds.has(criterio.id)) {
+      onChange(evalCriterios.filter((c) => c.id !== criterio.id))
+    } else {
+      // Reinserta en el orden original del catálogo
+      const merged = allCriterios.filter(
+        (c) => selectedIds.has(c.id) || c.id === criterio.id
+      )
+      onChange(merged)
+    }
   }
 
-  function remove(id) {
-    onChange(evalCriterios.filter((c) => c.id !== id))
+  function toggleAll(varClave, select) {
+    const varCriterios = allCriterios.filter((c) => c.variable_id === varClave)
+    if (select) {
+      const existing = evalCriterios.filter((c) => c.variable_id !== varClave)
+      const merged = allCriterios.filter(
+        (c) => existing.some((e) => e.id === c.id) || c.variable_id === varClave
+      )
+      onChange(merged)
+    } else {
+      onChange(evalCriterios.filter((c) => c.variable_id !== varClave))
+    }
   }
 
-  function updateCriterio(id, field, value) {
-    onChange(evalCriterios.map((c) => (c.id === id ? { ...c, [field]: value } : c)))
+  // Agrupa por variable
+  const groups = variables
+    .map((v) => ({
+      variable: v,
+      criterios: allCriterios.filter((c) => c.variable_id === v.clave),
+    }))
+    .filter((g) => g.criterios.length > 0)
+
+  const totalSelected = evalCriterios.length
+  const totalAvailable = allCriterios.length
+
+  if (variables.length === 0) {
+    return (
+      <div className="text-center py-16 border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant">
+        <Icon name="arrow_back" className="text-4xl block mb-2 mx-auto" />
+        <p className="text-sm font-medium">Primero selecciona variables en el paso anterior.</p>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* Instrucción */}
       <div className="flex items-start gap-3 bg-secondary-container rounded-xl px-5 py-4">
         <Icon name="info" className="text-primary flex-shrink-0 mt-0.5" />
         <p className="text-sm font-medium text-on-secondary-container leading-relaxed">
-          Define los criterios personalizados que serán evaluados con la escala Likert.
-          Estos criterios aparecerán en el formulario de validación para que los evaluadores los califiquen.
+          Los criterios se generan automáticamente a partir de las variables seleccionadas.
+          Desactiva los que no desees incluir en la evaluación.
         </p>
       </div>
 
-      {/* Escala de Likert con caritas */}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">
-          Escala de valoración aplicada
-        </p>
-        <div className="flex gap-2">
-          {LIKERT_FACES.map(({ n, emoji, label, color }) => (
-            <div key={n} className={`flex-1 flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-1 ${color}`}>
-              <span className="text-2xl leading-none">{emoji}</span>
-              <span className="text-sm font-bold leading-none">{n}</span>
-              <span className="text-[10px] font-medium text-center leading-tight hidden sm:block whitespace-pre-line">{label}</span>
-            </div>
-          ))}
-        </div>
+      {/* Contador */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-on-surface">Criterios por variable</p>
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+          totalSelected === totalAvailable
+            ? "bg-primary text-white"
+            : "bg-amber-100 text-amber-700"
+        }`}>
+          {totalSelected} / {totalAvailable} seleccionados
+        </span>
       </div>
 
-      {/* Lista de criterios de evaluación */}
-      {evalCriterios.length === 0 ? (
-        <div className="text-center py-10 border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant">
-          <Icon name="checklist" className="text-4xl block mb-2 mx-auto" />
-          <p className="text-sm font-medium">No hay criterios de evaluación.</p>
-          <p className="text-xs mt-1">Agrega los criterios personalizados que deseas evaluar.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {evalCriterios.map((c, i) => (
-            <div key={c.id} className="bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3">
-              {editingId === c.id ? (
-                <div className="space-y-2">
-                  <input
-                    value={c.nombre}
-                    onChange={(e) => updateCriterio(c.id, "nombre", e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && setEditingId(null)}
-                    autoFocus
-                    placeholder="Nombre del criterio"
-                    className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-                  />
-                  {variables.length > 0 && (
-                    <select
-                      value={c.variable_id ?? ""}
-                      onChange={(e) => {
-                        const v = variables.find((v) => String(v.id) === e.target.value)
-                        updateCriterio(c.id, "variable_id", v?.id ?? null)
-                        updateCriterio(c.id, "variable_nombre", v?.nombre ?? null)
-                      }}
-                      className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-                    >
-                      <option value="">— Sin variable asociada —</option>
-                      {variables.map((v) => (
-                        <option key={v.id} value={v.id}>{v.nombre}</option>
-                      ))}
-                    </select>
-                  )}
-                  <div className="flex justify-end">
-                    <button onClick={() => setEditingId(null)}
-                      className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90">
-                      Listo
-                    </button>
-                  </div>
+      {/* Grupos por variable */}
+      <div className="space-y-3">
+        {groups.map(({ variable, criterios: varCriterios }) => {
+          const selectedInVar = varCriterios.filter((c) => selectedIds.has(c.id)).length
+          const allSelected = selectedInVar === varCriterios.length
+
+          return (
+            <div key={variable.clave} className={`rounded-xl border-2 overflow-hidden transition-colors ${
+              selectedInVar > 0 ? "border-primary/30" : "border-outline-variant"
+            }`}>
+              {/* Cabecera de variable */}
+              <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border-b border-outline-variant/30">
+                <span className="text-[10px] font-bold font-mono bg-primary text-white px-1.5 py-0.5 rounded flex-shrink-0">
+                  {variable.clave}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-on-surface truncate">
+                    {variable.nombre.replace(`${variable.clave}. `, "")}
+                  </p>
+                  <p className="text-xs text-on-surface-variant">{variable.dimension}</p>
                 </div>
-              ) : (
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-on-surface block">{c.nombre}</span>
-                    {c.variable_nombre && (
-                      <span className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
-                        <Icon name="link" className="text-xs" />
-                        {c.variable_nombre}
-                      </span>
-                    )}
-                  </div>
-                  <div className="hidden sm:flex gap-1 flex-shrink-0">
-                    {LIKERT_FACES.map(({ n, emoji }) => (
-                      <span key={n} className="text-base leading-none opacity-60">{emoji}</span>
-                    ))}
-                  </div>
-                  <button onClick={() => setEditingId(c.id)} title="Editar"
-                    className="text-on-surface-variant hover:text-primary transition-colors flex-shrink-0">
-                    <Icon name="edit" className="text-base" />
-                  </button>
-                  <button onClick={() => remove(c.id)} title="Eliminar"
-                    className="text-on-surface-variant hover:text-error transition-colors flex-shrink-0">
-                    <Icon name="delete" className="text-base" />
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Agregar criterio de evaluación */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-4">
-        <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
-          <Icon name="add_circle" className="text-primary text-base" /> Agregar criterio de evaluación
-        </h4>
-
-        {/* Nombre */}
-        <div>
-          <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide block mb-1.5">
-            Nombre del criterio
-          </label>
-          <input
-            value={newNombre}
-            onChange={(e) => setNewNombre(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-            placeholder="Ej: Aplicabilidad, Pertinencia, Originalidad…"
-            className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-          />
-        </div>
-
-        {/* Selector de variable asociada */}
-        {variables.length > 0 && (
-          <div>
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide block mb-1.5">
-              Variable asociada
-            </label>
-            <div className="max-h-44 overflow-y-auto space-y-1 border border-outline-variant rounded-lg p-2 bg-surface">
-              <button
-                type="button"
-                onClick={() => setNewVariableId(null)}
-                className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                  newVariableId === null
-                    ? "bg-surface-container text-on-surface-variant font-medium"
-                    : "hover:bg-surface-container-low text-on-surface-variant"
-                }`}
-              >
-                <Icon name={newVariableId === null ? "radio_button_checked" : "radio_button_unchecked"} className="text-base flex-shrink-0" />
-                <span className="italic">Sin variable asociada</span>
-              </button>
-              {variables.map((v) => {
-                const selected = newVariableId === v.id
-                return (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs text-on-surface-variant">
+                    {selectedInVar}/{varCriterios.length}
+                  </span>
                   <button
-                    key={v.id}
                     type="button"
-                    onClick={() => setNewVariableId(v.id)}
-                    className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg border text-sm transition-all ${
-                      selected
-                        ? "border-primary bg-secondary-container text-primary font-semibold"
-                        : "border-transparent hover:border-outline-variant hover:bg-surface-container-low text-on-surface"
+                    onClick={() => toggleAll(variable.clave, !allSelected)}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                      allSelected
+                        ? "border-primary/40 text-primary bg-primary/5 hover:bg-primary/10"
+                        : "border-slate-300 text-slate-500 bg-white hover:border-primary hover:text-primary"
                     }`}
                   >
-                    <Icon
-                      name={selected ? "radio_button_checked" : "radio_button_unchecked"}
-                      className={`text-base flex-shrink-0 ${selected ? "text-primary" : "text-on-surface-variant"}`}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <span className="truncate block">{v.nombre}</span>
-                      {v.dimension && (
-                        <span className="text-[11px] text-on-surface-variant font-normal">{v.dimension}</span>
-                      )}
-                    </div>
+                    {allSelected ? "Quitar todos" : "Seleccionar todos"}
                   </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
+                </div>
+              </div>
 
-        <button
-          onClick={add}
-          disabled={!newNombre.trim()}
-          className="w-full py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2"
-        >
-          <Icon name="add" className="text-base" /> Agregar criterio
-        </button>
+              {/* Criterios */}
+              <div className="divide-y divide-outline-variant/20 bg-surface">
+                {varCriterios.map((c) => {
+                  const isSelected = selectedIds.has(c.id)
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggle(c)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                        isSelected ? "bg-primary/5 hover:bg-primary/8" : "hover:bg-surface-container-low"
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-all ${
+                        isSelected ? "bg-primary border-primary" : "border-outline-variant bg-surface"
+                      }`}>
+                        {isSelected && <Icon name="check" className="text-white text-xs" />}
+                      </div>
+                      <span className={`text-sm flex-1 ${isSelected ? "text-primary font-medium" : "text-on-surface-variant"}`}>
+                        {c.nombre}
+                      </span>
+                      <span className="text-base leading-none opacity-40 flex-shrink-0">
+                        {LIKERT_FACES.map(f => f.emoji).join("")}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       <p className="text-xs text-on-surface-variant">
-        {evalCriterios.length > 0
-          ? `${evalCriterios.length} criterio${evalCriterios.length !== 1 ? "s" : ""} de evaluación definido${evalCriterios.length !== 1 ? "s" : ""}.`
-          : "Este paso es opcional. Puedes continuar sin agregar criterios adicionales."
-        }
+        Este paso es opcional. Si no deseas evaluar criterios, puedes continuar sin seleccionar ninguno.
       </p>
     </div>
   )
