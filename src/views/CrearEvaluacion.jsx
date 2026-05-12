@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "../lib/supabase"
+import { DIMENSION_PRINCIPAL, SUBDIMENSIONES } from "../lib/variablesData"
 
 function Icon({ name, className = "" }) {
   return <span className={`material-symbols-outlined leading-none select-none ${className}`}>{name}</span>
@@ -85,142 +86,194 @@ function StepInfo({ form, onChange }) {
   )
 }
 
-// ── Step 2: Variables ──────────────────────────────────────────────────────
+// ── Step 2: Variables (selección desde catálogo precargado) ────────────────
 function StepVariables({ variables, onChange }) {
-  const [newVar, setNewVar] = useState({ nombre: "", descripcion: "", dimension: "" })
-  const [editingId, setEditingId] = useState(null)
+  const [openSub, setOpenSub] = useState(null)
+  const [hoveredClave, setHoveredClave] = useState(null)
 
-  const dimensionesExistentes = [...new Set(variables.map((v) => v.dimension).filter(Boolean))]
+  // Mapa rápido: clave → variable seleccionada
+  const selectedClaves = new Set(variables.map((v) => v.clave).filter(Boolean))
 
-  function addVariable() {
-    if (!newVar.nombre.trim()) return
-    const v = {
-      id: Date.now(),
-      nombre: newVar.nombre.trim(),
-      descripcion: newVar.descripcion.trim() || null,
-      dimension: newVar.dimension.trim() || "General",
+  function toggleVariable(sub, varData) {
+    if (selectedClaves.has(varData.clave)) {
+      // Deseleccionar
+      onChange(variables.filter((v) => v.clave !== varData.clave))
+    } else {
+      // Seleccionar — añadir con todos sus datos
+      onChange([...variables, {
+        id:          Date.now(),
+        clave:       varData.clave,
+        nombre:      varData.nombre,
+        descripcion: varData.descripcion,
+        dimension:   sub.nombre,
+      }])
     }
-    onChange([...variables, v])
-    setNewVar({ nombre: "", descripcion: "", dimension: "" })
   }
 
-  function removeVariable(id) {
-    onChange(variables.filter((v) => v.id !== id))
+  function removeVariable(clave) {
+    onChange(variables.filter((v) => v.clave !== clave))
   }
 
-  function updateVariable(id, field, value) {
-    onChange(variables.map((v) => (v.id === id ? { ...v, [field]: value } : v)))
-  }
+  const totalSelected = variables.length
 
   return (
-    <div className="space-y-6">
-      {/* Variable list */}
-      {variables.length === 0 ? (
-        <div className="text-center py-10 border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant">
-          <Icon name="list_alt" className="text-4xl block mb-2 mx-auto" />
-          <p className="text-sm">No hay variables. Agrega la primera abajo.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {variables.map((v, i) => (
-            <div key={v.id} className="bg-surface-container-low border border-outline-variant rounded-lg p-3">
-              {editingId === v.id ? (
-                <div className="space-y-2">
-                  <input
-                    value={v.nombre}
-                    onChange={(e) => updateVariable(v.id, "nombre", e.target.value)}
-                    placeholder="Nombre de la variable"
-                    className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-                  />
-                  <textarea
-                    value={v.descripcion ?? ""}
-                    onChange={(e) => updateVariable(v.id, "descripcion", e.target.value)}
-                    placeholder="Descripción (opcional)"
-                    rows={2}
-                    className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface resize-none"
-                  />
-                  <div className="flex gap-2">
-                    <input
-                      value={v.dimension}
-                      onChange={(e) => updateVariable(v.id, "dimension", e.target.value)}
-                      list="dims-edit"
-                      placeholder="Dimensión"
-                      className="flex-1 border border-outline-variant rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-                    />
-                    <datalist id="dims-edit">
-                      {dimensionesExistentes.map((d) => <option key={d} value={d} />)}
-                    </datalist>
-                    <button onClick={() => setEditingId(null)}
-                      className="px-3 py-2 bg-primary text-on-primary rounded text-sm font-semibold hover:opacity-90">
-                      Listo
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-on-surface-variant w-5 text-center flex-shrink-0">{i + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-primary truncate">{v.nombre}</div>
-                    {v.descripcion && (
-                      <div className="text-xs text-on-surface-variant mt-0.5 truncate">{v.descripcion}</div>
-                    )}
-                    <div className="text-xs text-on-surface-variant/60 mt-0.5">{v.dimension}</div>
-                  </div>
-                  <button onClick={() => setEditingId(v.id)} title="Editar"
-                    className="text-on-surface-variant hover:text-primary transition-colors">
-                    <Icon name="edit" className="text-base" />
-                  </button>
-                  <button onClick={() => removeVariable(v.id)} title="Eliminar"
-                    className="text-on-surface-variant hover:text-error transition-colors">
-                    <Icon name="delete" className="text-base" />
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="space-y-5">
 
-      {/* Add new variable */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
-        <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
-          <Icon name="add_circle" className="text-primary text-base" /> Agregar variable
-        </h4>
-        <input
-          value={newVar.nombre}
-          onChange={(e) => setNewVar((p) => ({ ...p, nombre: e.target.value }))}
-          onKeyDown={(e) => e.key === "Enter" && addVariable()}
-          placeholder="Nombre de la variable o ítem..."
-          className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-        />
-        <textarea
-          value={newVar.descripcion}
-          onChange={(e) => setNewVar((p) => ({ ...p, descripcion: e.target.value }))}
-          placeholder="Descripción de la variable (opcional)"
-          rows={2}
-          className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface resize-none"
-        />
-        <div className="flex gap-2">
-          <input
-            value={newVar.dimension}
-            onChange={(e) => setNewVar((p) => ({ ...p, dimension: e.target.value }))}
-            onKeyDown={(e) => e.key === "Enter" && addVariable()}
-            list="dims-new"
-            placeholder="Dimensión (Ej: Hábitos, Rendimiento…)"
-            className="flex-1 border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-          />
-          <datalist id="dims-new">
-            {dimensionesExistentes.map((d) => <option key={d} value={d} />)}
-          </datalist>
-          <button onClick={addVariable} disabled={!newVar.nombre.trim()}
-            className="px-4 py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center gap-2">
-            <Icon name="add" className="text-base" /> Agregar
-          </button>
+      {/* Dimensión principal */}
+      <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3">
+        <Icon name="account_balance" className="text-primary text-xl flex-shrink-0" />
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-primary/60">Dimensión principal</p>
+          <p className="font-bold text-primary text-sm">{DIMENSION_PRINCIPAL}</p>
         </div>
       </div>
 
+      {/* Resumen de selección */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-on-surface">
+          Subdimensiones
+        </p>
+        {totalSelected > 0 && (
+          <span className="text-xs font-bold bg-primary text-white px-2.5 py-1 rounded-full">
+            {totalSelected} variable{totalSelected !== 1 ? "s" : ""} seleccionada{totalSelected !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+
+      {/* Lista de subdimensiones */}
+      <div className="space-y-3">
+        {SUBDIMENSIONES.map((sub) => {
+          const isOpen = openSub === sub.id
+          const countInSub = sub.variables.filter((v) => selectedClaves.has(v.clave)).length
+
+          return (
+            <div key={sub.id} className={`rounded-xl border-2 overflow-hidden transition-colors ${
+              countInSub > 0 ? "border-primary/40" : "border-outline-variant"
+            }`}>
+              {/* Cabecera subdimensión */}
+              <button
+                type="button"
+                onClick={() => setOpenSub(isOpen ? null : sub.id)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 bg-surface hover:bg-surface-container-low transition-colors text-left"
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                  countInSub > 0 ? "bg-primary text-white" : "bg-surface-container text-on-surface-variant"
+                }`}>
+                  {countInSub > 0
+                    ? <span className="text-xs font-bold">{countInSub}</span>
+                    : <Icon name="folder" className="text-sm" />
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-on-surface leading-tight">{sub.nombre}</p>
+                  <p className="text-xs text-on-surface-variant mt-0.5 leading-tight line-clamp-1">{sub.descripcion}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs text-on-surface-variant">
+                    {sub.variables.length} vars
+                  </span>
+                  <Icon name={isOpen ? "expand_less" : "expand_more"} className="text-on-surface-variant text-base" />
+                </div>
+              </button>
+
+              {/* Descripción de subdimensión (expandida) */}
+              {isOpen && (
+                <div>
+                  <div className="px-4 py-3 bg-secondary-container/30 border-y border-outline-variant/30">
+                    <p className="text-xs text-on-surface-variant leading-relaxed">{sub.descripcion}</p>
+                  </div>
+
+                  {/* Variables de la subdimensión */}
+                  <div className="divide-y divide-outline-variant/20">
+                    {sub.variables.map((varData) => {
+                      const isSelected = selectedClaves.has(varData.clave)
+                      const isHovered = hoveredClave === varData.clave
+
+                      return (
+                        <div
+                          key={varData.clave}
+                          className={`transition-colors ${isSelected ? "bg-primary/5" : "bg-surface hover:bg-surface-container-low"}`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => toggleVariable(sub, varData)}
+                            onMouseEnter={() => setHoveredClave(varData.clave)}
+                            onMouseLeave={() => setHoveredClave(null)}
+                            className="w-full flex items-start gap-3 px-4 py-3 text-left"
+                          >
+                            {/* Checkbox visual */}
+                            <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5 border-2 transition-all ${
+                              isSelected
+                                ? "bg-primary border-primary"
+                                : "border-outline-variant bg-surface"
+                            }`}>
+                              {isSelected && <Icon name="check" className="text-white text-xs" />}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-mono flex-shrink-0 ${
+                                  isSelected ? "bg-primary text-white" : "bg-surface-container text-on-surface-variant"
+                                }`}>
+                                  {varData.clave}
+                                </span>
+                                <p className={`text-sm font-semibold leading-tight ${isSelected ? "text-primary" : "text-on-surface"}`}>
+                                  {varData.nombre.replace(`${varData.clave}. `, "")}
+                                </p>
+                              </div>
+                              {/* Descripción: siempre visible si está seleccionada o en hover */}
+                              {(isSelected || isHovered) && (
+                                <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
+                                  {varData.descripcion}
+                                </p>
+                              )}
+                            </div>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Variables seleccionadas (resumen) */}
+      {totalSelected > 0 && (
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+            Variables seleccionadas ({totalSelected})
+          </p>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto">
+            {variables.map((v) => (
+              <div key={v.clave} className="flex items-center gap-2 bg-surface rounded-lg px-3 py-2 border border-outline-variant/50">
+                <span className="text-[10px] font-bold font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded flex-shrink-0">
+                  {v.clave}
+                </span>
+                <span className="text-xs font-medium text-on-surface flex-1 truncate">
+                  {v.nombre.replace(`${v.clave}. `, "")}
+                </span>
+                <span className="text-[10px] text-on-surface-variant flex-shrink-0 hidden sm:block truncate max-w-[120px]">
+                  {v.dimension}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeVariable(v.clave)}
+                  className="text-on-surface-variant hover:text-error transition-colors flex-shrink-0"
+                  title="Quitar"
+                >
+                  <Icon name="close" className="text-sm" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <p className="text-xs text-on-surface-variant">
-        {variables.length} variable{variables.length !== 1 ? "s" : ""} agregada{variables.length !== 1 ? "s" : ""}. Mínimo 1 para continuar.
+        Seleccione al menos 1 variable para continuar. Haga clic en una subdimensión para expandirla.
       </p>
     </div>
   )
