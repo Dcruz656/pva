@@ -876,12 +876,18 @@ function ScreenForm({ estudio, sessionId, onDone }) {
     setSubmitting(true)
     setShowConfirm(false)
     try {
-      const { error } = await supabase
+      const rows = buildRows("enviado")
+      console.log("[PVA] handleSubmit rows:", rows)
+      const { data, error } = await supabase
         .from("respuestas")
-        .upsert(buildRows("enviado"), { onConflict: "estudio_id,session_id,variable_id" })
+        .upsert(rows, { onConflict: "estudio_id,session_id,variable_id" })
+        .select()
+      console.log("[PVA] upsert result:", { data, error })
       if (error) throw error
+      console.log("[PVA] calling onDone()")
       onDone()
     } catch (err) {
+      console.error("[PVA] handleSubmit error:", err)
       notify("error", "No se pudo enviar: " + err.message)
       setSubmitting(false)
     }
@@ -1540,7 +1546,11 @@ export default function ResponderEvaluacion({ studyId }) {
       sessionId={sessionId}
       onDone={() => {
         const base = estudioRef.current ?? estudio
+        console.log("[PVA] onDone fired. estudioRef:", base)
+        console.log("[PVA] criterios_evaluacion in base:", base?.criterios_evaluacion)
+        console.log("[PVA] variables in base:", base?.variables)
         const criterios = getCriteriosEval(base)
+        console.log("[PVA] getCriteriosEval result:", criterios)
         if (criterios.length === 0) { setPhase("done"); return }
         const nextEstudio = { ...base, criterios_evaluacion: criterios }
         estudioRef.current = nextEstudio
