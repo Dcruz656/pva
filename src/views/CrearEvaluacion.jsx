@@ -805,7 +805,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
           fecha_limite:  form.fecha_limite || null,
           variables:            form.variables,
           criterios:            form.criterios,
-          criterios_evaluacion: form.criterios_evaluacion,
+          criterios_evaluacion: buildCriteriosEval(form.variables, form.criterios_evaluacion),
           modo_acceso:          form.modo_acceso,
           codigo:               form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
         }).eq("id", estudioToEdit.id)
@@ -818,6 +818,31 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
 
   function updateForm(field, value) {
     setForm((p) => ({ ...p, [field]: value }))
+  }
+
+  // Devuelve los criterios_evaluacion listos para guardar:
+  // Si el usuario visitó el paso 4 y tiene selección → la usa (filtrando variables removidas).
+  // Si nunca visitó el paso 4 → genera todos los criterios de las variables actuales.
+  function buildCriteriosEval(variables, current) {
+    const varClaves = new Set(variables.map((v) => v.clave))
+    if (current.length > 0) {
+      return current.filter((c) => varClaves.has(c.variable_id))
+    }
+    const result = []
+    for (const v of variables) {
+      const catVar = findVarData(v.clave)
+      if (!catVar?.criterios?.length) continue
+      for (const nombre of catVar.criterios) {
+        result.push({
+          id:              `${v.clave}__${nombre}`,
+          nombre,
+          variable_id:     v.clave,
+          variable_nombre: v.nombre,
+          dimension:       v.dimension,
+        })
+      }
+    }
+    return result
   }
 
   function canAdvance() {
@@ -841,7 +866,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
         fecha_limite:  form.fecha_limite || null,
         variables:            form.variables,
         criterios:            form.criterios,
-        criterios_evaluacion: form.criterios_evaluacion,
+        criterios_evaluacion: buildCriteriosEval(form.variables, form.criterios_evaluacion),
         modo_acceso:          form.modo_acceso,
         codigo:               form.modo_acceso === "invitacion_codigo" ? form.codigo.trim() : null,
         estado:               "activo",
