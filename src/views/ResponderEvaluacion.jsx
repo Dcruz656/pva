@@ -1416,13 +1416,15 @@ export default function ResponderEvaluacion({ studyId }) {
       if (!study.criterios_evaluacion?.length && study.variables?.length) {
         const computed = []
         for (const v of study.variables) {
-          const catVar = findVarData(v.clave)
+          // Usa clave directa; si no existe la extrae del nombre (ej: "EX1. Integración..." → "EX1")
+          const clave = v.clave || v.nombre?.match(/^([A-Z]+\d+)\./)?.[1]
+          const catVar = findVarData(clave)
           if (!catVar?.criterios?.length) continue
           for (const nombre of catVar.criterios) {
             computed.push({
-              id:              `${v.clave}__${nombre}`,
+              id:              `${clave}__${nombre}`,
               nombre,
-              variable_id:     v.clave,
+              variable_id:     clave,
               variable_nombre: v.nombre,
               dimension:       v.dimension,
             })
