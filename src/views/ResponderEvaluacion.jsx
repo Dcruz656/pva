@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react"
 import { supabase } from "../lib/supabase"
-import { findVarData } from "../lib/variablesData"
+import { findVarData, SUBDIMENSIONES } from "../lib/variablesData"
 
 const LIKERT = [
   { n: 1, label: "Totalmente en desacuerdo", short: "Muy bajo",  color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",   dot: "bg-red-400"   } },
@@ -1387,16 +1387,61 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
 
 // ── Entry point ────────────────────────────────────────────────────────────
 
+const CATALOGO_VARS = SUBDIMENSIONES.flatMap((sub) =>
+  sub.variables.map((v) => ({ ...v, __dimension_catalogo: sub.nombre }))
+)
+
+function normalizeText(value) {
+  return String(value ?? "").trim().toLowerCase()
+}
+
+function extractClave(variable) {
+  const rawClave = typeof variable?.clave === "string" ? variable.clave.trim().toUpperCase() : ""
+  if (rawClave) return rawClave
+  const nombre = typeof variable?.nombre === "string" ? variable.nombre.trim() : ""
+  return nombre.match(/^([A-Za-z]+\d+)(?:\.\s*|\s+)/)?.[1]?.toUpperCase() || null
+}
+
+function resolveCatalogVar(variable) {
+  const clave = extractClave(variable)
+  const nombre = normalizeText(variable?.nombre)
+  const dimension = normalizeText(variable?.dimension)
+
+  if (clave) {
+    const sameKey = CATALOGO_VARS.filter((item) => item.clave === clave)
+    if (sameKey.length === 1) return { clave, catVar: sameKey[0] }
+    if (sameKey.length > 1) {
+      const byDim  = sameKey.find((item) => normalizeText(item.__dimension_catalogo) === dimension)
+      if (byDim) return { clave, catVar: byDim }
+      const byName = sameKey.find((item) => normalizeText(item.nombre) === nombre)
+      if (byName) return { clave, catVar: byName }
+      return { clave, catVar: sameKey[0] }
+    }
+    return { clave, catVar: findVarData(clave) }
+  }
+
+  const byName = CATALOGO_VARS.find((item) => normalizeText(item.nombre) === nombre)
+  if (byName) return { clave: byName.clave, catVar: byName }
+  return { clave: null, catVar: null }
+}
+
 function getCriteriosEval(estudio) {
-  if (estudio.criterios_evaluacion?.length > 0) return estudio.criterios_evaluacion
-  if (!estudio.variables?.length) return []
+  if (Array.isArray(estudio?.criterios_evaluacion) && estudio.criterios_evaluacion.length > 0)
+    return estudio.criterios_evaluacion
+  if (!Array.isArray(estudio?.variables) || estudio.variables.length === 0) return []
+
   const result = []
   for (const v of estudio.variables) {
-    const clave = v.clave || v.nombre?.match(/^([A-Z]+\d+)\./)?.[1]
-    const catVar = findVarData(clave)
-    if (!catVar?.criterios?.length) continue
+    const { clave, catVar } = resolveCatalogVar(v)
+    if (!clave || !Array.isArray(catVar?.criterios) || catVar.criterios.length === 0) continue
     for (const nombre of catVar.criterios) {
-      result.push({ id: `${clave}__${nombre}`, nombre, variable_id: clave, variable_nombre: v.nombre, dimension: v.dimension })
+      result.push({
+        id: `${clave}__${nombre}`,
+        nombre,
+        variable_id: clave,
+        variable_nombre: v.nombre ?? catVar.nombre,
+        dimension: v.dimension ?? catVar.__dimension_catalogo,
+      })
     }
   }
   return result
@@ -1494,15 +1539,13 @@ export default function ResponderEvaluacion({ studyId }) {
       estudio={estudio}
       sessionId={sessionId}
       onDone={() => {
-        const criterios = getCriteriosEval(estudioRef.current || estudio)
-        if (criterios.length > 0) {
-          // Asegura que estudio tenga los criterios antes de mostrar la etapa 2
-          estudioRef.current = { ...estudioRef.current, criterios_evaluacion: criterios }
-          setEstudio(estudioRef.current)
-          setPhase("criterios_eval")
-        } else {
-          setPhase("done")
-        }
+        const base = estudioRef.current ?? estudio
+        const criterios = getCriteriosEval(base)
+        if (criterios.length === 0) { setPhase("done"); return }
+        const nextEstudio = { ...base, criterios_evaluacion: criterios }
+        estudioRef.current = nextEstudio
+        setEstudio(nextEstudio)
+        setPhase("criterios_eval")
       }}
     />
   )
