@@ -1427,10 +1427,16 @@ export default function ResponderEvaluacion({ studyId }) {
 
       if (error || !study) { setPhase("error"); return }
 
-      estudioRef.current = study
-      setEstudio(study)
+      // Always compute criterios — fills gaps when criterios_evaluacion was never saved to DB
+      const computedCriterios = getCriteriosEval(study)
+      const enriched = computedCriterios.length > 0 && !study.criterios_evaluacion?.length
+        ? { ...study, criterios_evaluacion: computedCriterios }
+        : study
 
-      if (study.estado === "cerrado") { setPhase("closed"); return }
+      estudioRef.current = enriched
+      setEstudio(enriched)
+
+      if (enriched.estado === "cerrado") { setPhase("closed"); return }
 
       const { data: submitted } = await supabase
         .from("respuestas")
@@ -1439,7 +1445,7 @@ export default function ResponderEvaluacion({ studyId }) {
         .eq("session_id", sessionId)
         .eq("estado", "enviado")
       if (submitted?.length > 0) {
-        const criterios = study.criterios_evaluacion || []
+        const criterios = enriched.criterios_evaluacion || []
         if (criterios.length > 0) {
           const submittedIds = new Set(submitted.map((r) => r.variable_id))
           const allCriteriosDone = criterios.every((c) => submittedIds.has(String(c.id)))
