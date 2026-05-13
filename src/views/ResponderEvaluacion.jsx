@@ -1451,6 +1451,123 @@ function getCriteriosEval(estudio) {
   return result
 }
 
+// ── Pantalla de transición entre etapas ───────────────────────────────────
+
+function ScreenTransition({ estudio, criterios, onContinue }) {
+  // Agrupar criterios por variable
+  const porVariable = []
+  for (const c of criterios) {
+    const grupo = porVariable.find((g) => g.variable_nombre === c.variable_nombre)
+    if (grupo) {
+      grupo.criterios.push(c.nombre)
+    } else {
+      porVariable.push({ variable_nombre: c.variable_nombre, dimension: c.dimension, criterios: [c.nombre] })
+    }
+  }
+
+  return (
+    <EvalLayout progress={50} title={estudio.titulo}>
+      <div className="max-w-2xl mx-auto space-y-5 py-6">
+
+        {/* Etapa 1 completada */}
+        <div className="flex items-center gap-4 bg-green-50 border border-green-200 rounded-2xl px-5 py-4">
+          <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Icon name="verified" className="text-white text-2xl" />
+          </div>
+          <div>
+            <p className="font-bold text-green-800 text-base">¡Etapa 1 completada!</p>
+            <p className="text-sm text-green-700 mt-0.5">
+              Sus valoraciones de variables han sido registradas exitosamente.
+            </p>
+          </div>
+        </div>
+
+        {/* Qué sigue */}
+        <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+          <div className="bg-indigo-600 px-6 py-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-sm">2</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">A continuación — Etapa 2</span>
+            </div>
+            <h2 className="font-bold text-xl text-white">Evaluación de Criterios</h2>
+            <p className="text-sm text-white/75 mt-2 leading-relaxed">
+              En esta etapa usted evaluará la <strong className="text-white">pertinencia</strong> de cada criterio
+              para explicar su variable asociada. Por cada criterio deberá indicar qué tan apropiado
+              es para describir o medir la variable, usando la escala de emojis del 1 al 5.
+            </p>
+          </div>
+
+          {/* Resumen de lo que se evaluará */}
+          <div className="p-5 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+              Criterios que evaluará en esta etapa
+            </p>
+            {porVariable.map(({ variable_nombre, dimension, criterios: crit }) => (
+              <div key={variable_nombre} className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon name="data_object" className="text-indigo-600 text-sm" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-800 text-sm leading-snug">{variable_nombre}</p>
+                    {dimension && (
+                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                        <Icon name="category" className="text-xs" />{dimension}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {crit.map((nombre) => (
+                        <span key={nombre} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
+                          <Icon name="check_small" className="text-xs" />
+                          {nombre}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Escala de referencia */}
+          <div className="px-5 pb-5">
+            <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Escala de esta etapa</p>
+            <div className="flex gap-2">
+              {LIKERT_FACES.map(({ n, emoji, label, border, bg, text }) => (
+                <div key={n} className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border-2 ${border} ${bg}`}>
+                  <span className="text-lg leading-none">{emoji}</span>
+                  <span className={`text-xs font-bold ${text}`}>{n}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Nota */}
+        <div className="flex items-start gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 text-xs text-slate-500">
+          <Icon name="info" className="text-slate-400 text-base flex-shrink-0 mt-0.5" />
+          <span>
+            Esta etapa tiene <strong className="text-slate-700">{criterios.length} criterio{criterios.length !== 1 ? "s" : ""}</strong> para
+            evaluar. Una vez que los envíe, su participación habrá concluido.
+          </span>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={onContinue}
+          className="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg
+                     hover:opacity-90 active:scale-[0.99] transition-all text-base flex items-center justify-center gap-3"
+        >
+          <Icon name="arrow_forward" className="text-xl" />
+          Comenzar Etapa 2
+        </button>
+      </div>
+    </EvalLayout>
+  )
+}
+
 export default function ResponderEvaluacion({ studyId }) {
   const [phase, setPhase] = useState("loading")
   const [estudio, setEstudio] = useState(null)
@@ -1530,6 +1647,14 @@ export default function ResponderEvaluacion({ studyId }) {
   }
   if (phase === "welcome") return <ScreenWelcome estudio={estudio} onStart={() => setPhase("form")} />
 
+  if (phase === "transition") return (
+    <ScreenTransition
+      estudio={estudio}
+      criterios={estudio.criterios_evaluacion || []}
+      onContinue={() => setPhase("criterios_eval")}
+    />
+  )
+
   if (phase === "criterios_eval") return (
     <ScreenCriteriosEval
       estudio={estudio}
@@ -1549,7 +1674,7 @@ export default function ResponderEvaluacion({ studyId }) {
         const nextEstudio = { ...base, criterios_evaluacion: criterios }
         estudioRef.current = nextEstudio
         setEstudio(nextEstudio)
-        setPhase("criterios_eval")
+        setPhase("transition")
       }}
     />
   )
