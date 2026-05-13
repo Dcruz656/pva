@@ -244,7 +244,7 @@ function HistorialView() {
     setExpandedEvals((prev) => ({ ...prev, [sid]: !prev[sid] }))
   }
 
-  const TABLE_HEADERS = ["Evaluación", "Variable", "Dimensión", "Claridad", "Relevancia", "Coherencia", "Estado", "Fecha"]
+  const TABLE_HEADERS = ["Evaluación", "Criterio", "Variable", "Claridad", "Relevancia", "Coherencia", "Estado", "Fecha"]
 
   function RatingBadge({ val }) {
     return (
