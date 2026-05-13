@@ -9,6 +9,7 @@ export const DIMENSION_PRINCIPAL = "La biblioteca como espacio público"
 export const INDICES = [
   { id: 1, nombre: "La biblioteca como espacio público" },
   { id: 2, nombre: "La biblioteca como sujeto colectivo" },
+  { id: 3, nombre: "La biblioteca como objeto de debate y representación" },
 ]
 
 export const SUBDIMENSIONES = [
@@ -408,8 +409,67 @@ export const SUBDIMENSIONES_INDICE2 = [
   },
 ]
 
+export const SUBDIMENSIONES_INDICE3 = [
+  {
+    id: "debates_movimientos",
+    nombre: "Debates y movimientos públicos",
+    descripcion: "Tipos de acciones que dan cuenta de los debates y movimientos públicos en torno a la biblioteca.",
+    indice: 3,
+    variables: [
+      {
+        clave: "OD1",
+        nombre: "OD1. Propuestas e iniciativas públicas",
+        descripcion: "Acciones impulsadas desde la ciudadanía, colectivos u otros actores sociales que buscan crear, transformar o redefinir las bibliotecas mediante proyectos, programas o reformas.",
+        criterios: [],
+      },
+      {
+        clave: "OD2",
+        nombre: "OD2. Publicaciones académicas",
+        descripcion: "Producción de conocimiento (investigaciones, artículos, informes) que analiza, problematiza y orienta el desarrollo de las bibliotecas en sus dimensiones espacial, organizativa y social.",
+        criterios: [],
+      },
+      {
+        clave: "OD3",
+        nombre: "OD3. Comunicaciones públicas",
+        descripcion: "Circulación de discursos en espacios públicos y mediáticos (congresos, conferencias, debates, páginas web, redes sociodigitales, documentales, videos, etc.) que influyen en la percepción, orientación y debate sobre las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "OD4",
+        nombre: "OD4. Campañas publicitarias",
+        descripcion: "Estrategias comunicativas organizadas que buscan sensibilizar, posicionar o movilizar apoyo en torno a necesidades, problemáticas o valores asociados a las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "OD5",
+        nombre: "OD5. Cabildeo (lobbying)",
+        descripcion: "Acciones de incidencia directa ante actores de poder o toma de decisiones para influir en políticas, recursos y definiciones relacionadas con las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "OD6",
+        nombre: "OD6. Vigilancia ciudadana",
+        descripcion: "Prácticas de monitoreo, seguimiento y exigencia de transparencia sobre decisiones, recursos y resultados vinculados a las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "OD7",
+        nombre: "OD7. Movilización",
+        descripcion: "Acciones colectivas organizadas que buscan influir, defender o transformar las condiciones de las bibliotecas mediante participación activa en el espacio público.",
+        criterios: [],
+      },
+      {
+        clave: "OD8",
+        nombre: "OD8. Protestas públicas (defensa y abogacía)",
+        descripcion: "Expresiones visibles de desacuerdo o defensa que buscan presionar cambios en políticas, condiciones o prácticas relacionadas con las bibliotecas.",
+        criterios: [],
+      },
+    ],
+  },
+]
+
 /** Todas las subdimensiones de todos los índices */
-export const TODAS_SUBDIMENSIONES = [...SUBDIMENSIONES, ...SUBDIMENSIONES_INDICE2]
+export const TODAS_SUBDIMENSIONES = [...SUBDIMENSIONES, ...SUBDIMENSIONES_INDICE2, ...SUBDIMENSIONES_INDICE3]
 
 /** Devuelve el objeto de catálogo de una variable por su clave (busca en todos los índices) */
 export function findVarData(clave) {

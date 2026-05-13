@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { supabase } from "../lib/supabase"
-import { DIMENSION_PRINCIPAL, SUBDIMENSIONES, SUBDIMENSIONES_INDICE2, INDICES, findVarData } from "../lib/variablesData"
+import { DIMENSION_PRINCIPAL, SUBDIMENSIONES, SUBDIMENSIONES_INDICE2, SUBDIMENSIONES_INDICE3, INDICES, findVarData } from "../lib/variablesData"
 
 function Icon({ name, className = "" }) {
   return <span className={`material-symbols-outlined leading-none select-none ${className}`}>{name}</span>
@@ -307,6 +307,96 @@ function StepVariables({ variables, onChange }) {
                                     {varData.clave}
                                   </span>
                                   <p className={`text-sm font-semibold leading-tight ${isSelected ? "text-indigo-700" : "text-on-surface"}`}>
+                                    {varData.nombre.replace(`${varData.clave}. `, "")}
+                                  </p>
+                                </div>
+                                {(isSelected || isHovered) && (
+                                  <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">{varData.descripcion}</p>
+                                )}
+                              </div>
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── Índice 3 ── */}
+      <div>
+        <div className="flex items-center gap-3 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 mb-3">
+          <Icon name="forum" className="text-violet-600 text-xl flex-shrink-0" />
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-violet-400">Índice 3</p>
+            <p className="font-bold text-violet-700 text-sm">{INDICES[2].nombre}</p>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {SUBDIMENSIONES_INDICE3.map((sub) => {
+            const isOpen = openSub === sub.id
+            const countInSub = sub.variables.filter((v) => selectedClaves.has(v.clave)).length
+            return (
+              <div key={sub.id} className={`rounded-xl border-2 overflow-hidden transition-colors ${
+                countInSub > 0 ? "border-violet-400/60" : "border-outline-variant"
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => setOpenSub(isOpen ? null : sub.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-surface hover:bg-surface-container-low transition-colors text-left"
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                    countInSub > 0 ? "bg-violet-600 text-white" : "bg-surface-container text-on-surface-variant"
+                  }`}>
+                    {countInSub > 0
+                      ? <span className="text-xs font-bold">{countInSub}</span>
+                      : <Icon name="folder" className="text-sm" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-on-surface leading-tight">{sub.nombre}</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5 leading-tight line-clamp-1">{sub.descripcion}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-on-surface-variant">{sub.variables.length} vars</span>
+                    <Icon name={isOpen ? "expand_less" : "expand_more"} className="text-on-surface-variant text-base" />
+                  </div>
+                </button>
+                {isOpen && (
+                  <div>
+                    <div className="px-4 py-3 bg-violet-50/50 border-y border-outline-variant/30">
+                      <p className="text-xs text-on-surface-variant leading-relaxed">{sub.descripcion}</p>
+                    </div>
+                    <div className="divide-y divide-outline-variant/20">
+                      {sub.variables.map((varData) => {
+                        const isSelected = selectedClaves.has(varData.clave)
+                        const isHovered = hoveredClave === varData.clave
+                        return (
+                          <div key={varData.clave} className={`transition-colors ${isSelected ? "bg-violet-50/50" : "bg-surface hover:bg-surface-container-low"}`}>
+                            <button
+                              type="button"
+                              onClick={() => toggleVariable(sub, varData)}
+                              onMouseEnter={() => setHoveredClave(varData.clave)}
+                              onMouseLeave={() => setHoveredClave(null)}
+                              className="w-full flex items-start gap-3 px-4 py-3 text-left"
+                            >
+                              <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5 border-2 transition-all ${
+                                isSelected ? "bg-violet-600 border-violet-600" : "border-outline-variant bg-surface"
+                              }`}>
+                                {isSelected && <Icon name="check" className="text-white text-xs" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-mono flex-shrink-0 ${
+                                    isSelected ? "bg-violet-600 text-white" : "bg-surface-container text-on-surface-variant"
+                                  }`}>
+                                    {varData.clave}
+                                  </span>
+                                  <p className={`text-sm font-semibold leading-tight ${isSelected ? "text-violet-700" : "text-on-surface"}`}>
                                     {varData.nombre.replace(`${varData.clave}. `, "")}
                                   </p>
                                 </div>
