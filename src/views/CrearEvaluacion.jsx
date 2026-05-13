@@ -756,6 +756,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
       { id: 1, nombre: "Claridad" },
       { id: 2, nombre: "Relevancia" },
       { id: 3, nombre: "Coherencia" },
+      { id: 4, nombre: "Pertinencia" },
     ]
     if (estudioToEdit) {
       return {
