@@ -344,6 +344,68 @@ export const SUBDIMENSIONES_INDICE2 = [
       },
     ],
   },
+  {
+    id: "instituciones_legitiman",
+    nombre: "Instituciones que legitiman y norman (ILN)",
+    descripcion: "Formas de actuar para legitimar, normar y defender los intereses de la sociedad, las bibliotecas y del personal bibliotecario.",
+    indice: 2,
+    variables: [
+      {
+        clave: "SI1",
+        nombre: "SI1. Posturas oficiales",
+        descripcion: "Conjunto de declaraciones, lineamientos y posicionamientos institucionales que orientan el diseño, gestión y rol social de las bibliotecas y de su personal (declaraciones, directrices, manifiestos).",
+        criterios: [],
+      },
+      {
+        clave: "SI2",
+        nombre: "SI2. Decisiones y acuerdos",
+        descripcion: "Resoluciones y convenios formales (acuerdos, convenios, resoluciones) que establecen marcos de acción para bibliotecas, sus servicios, personal bibliotecario y usuarios.",
+        criterios: [],
+      },
+      {
+        clave: "SI3",
+        nombre: "SI3. Compromisos formales",
+        descripcion: "Compromisos que aseguran recursos, planificación y marcos éticos para el desarrollo bibliotecario (agendas, planes de trabajo).",
+        criterios: [],
+      },
+      {
+        clave: "SI4",
+        nombre: "SI4. Regulación",
+        descripcion: "Ecosistema legal y ético: conjunto de leyes, normas y disposiciones técnicas que regulan el funcionamiento, infraestructura, servicios y comportamiento dentro de las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "SI5",
+        nombre: "SI5. Rendición de cuentas",
+        descripcion: "Obligaciones institucionales explícitas. Procesos de transparencia mediante los cuales se reportan resultados, uso de recursos y desempeño institucional.",
+        criterios: [],
+      },
+      {
+        clave: "SI6",
+        nombre: "SI6. Auditorías",
+        descripcion: "Mecanismos de evaluación sistemática que revisan el desempeño, uso de recursos, impacto y cumplimiento normativo de las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "SI7",
+        nombre: "SI7. Certificaciones",
+        descripcion: "Reconocimientos formales que validan el cumplimiento de estándares de calidad en infraestructura, gestión y profesionalización del personal bibliotecario.",
+        criterios: [],
+      },
+      {
+        clave: "SI8",
+        nombre: "SI8. Estándares",
+        descripcion: "Criterios técnicos y operativos que establecen niveles mínimos o deseables de calidad en el diseño, servicios, accesibilidad y experiencia en las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "SI9",
+        nombre: "SI9. Cooperación",
+        descripcion: "Acciones de articulación institucional que fomentan la colaboración entre bibliotecas, organizaciones y comunidad para fortalecer su desarrollo e impacto.",
+        criterios: [],
+      },
+    ],
+  },
 ]
 
 /** Todas las subdimensiones de todos los índices */
