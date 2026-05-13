@@ -542,6 +542,56 @@ export const SUBDIMENSIONES_INDICE3 = [
       },
     ],
   },
+  {
+    id: "representaciones_publicas",
+    nombre: "Representaciones públicas",
+    descripcion: "Tipos de acciones públicas desarrolladas por entidades comerciales y medios de comunicación que difunden una imagen de la biblioteca.",
+    indice: 3,
+    variables: [
+      {
+        clave: "OP1",
+        nombre: "OP1. Marketing",
+        descripcion: "Acciones de promoción que utilizan la imagen, estética y simbolismo de la biblioteca para influir en su diseño, gestión y percepción social, reforzando prestigio, posicionamiento y legitimidad cultural.",
+        criterios: [],
+      },
+      {
+        clave: "OP2",
+        nombre: "OP2. Reportajes y noticias",
+        descripcion: "Cobertura mediática que visibiliza, evalúa o critica la biblioteca, generando presión pública sobre su diseño, gestión y prácticas de uso, e influyendo en debates culturales.",
+        criterios: [],
+      },
+      {
+        clave: "OP3",
+        nombre: "OP3. Comercialización de productos",
+        descripcion: "Iniciativas que incorporan lógicas de consumo y alianzas comerciales dentro de la biblioteca, afectando el diseño del espacio, la gestión orientada al mercado y la forma en que se utiliza.",
+        criterios: [],
+      },
+      {
+        clave: "OP4",
+        nombre: "OP4. Venta de libros",
+        descripcion: "Influencia del mercado editorial en la disposición espacial, promoción y circulación de libros, así como en la formación de hábitos de lectura y prácticas de uso de la biblioteca.",
+        criterios: [],
+      },
+      {
+        clave: "OP5",
+        nombre: "OP5. Eventos sociales y mediáticos",
+        descripcion: "Organización de eventos públicos o mediáticos que transforman temporalmente la biblioteca en escenario cultural, influyendo en su diseño, gestión y formas de uso.",
+        criterios: [],
+      },
+      {
+        clave: "OP6",
+        nombre: "OP6. Renders y visualización arquitectónica",
+        descripcion: "Difusión de imágenes, modelos 3D o renders de bibliotecas ideales que orientan tendencias de diseño, justifican decisiones de gestión y construyen expectativas sobre el uso del espacio.",
+        criterios: [],
+      },
+      {
+        clave: "OP7",
+        nombre: "OP7. Actividades turísticas",
+        descripcion: "Diseño de bibliotecas como atractivos urbanos o culturales, incorporando estrategias de gestión turística y promoviendo su uso como destino de visitantes.",
+        criterios: [],
+      },
+    ],
+  },
 ]
 
 /** Todas las subdimensiones de todos los índices */
