@@ -67,39 +67,36 @@ function KpiCard({ icon, label, value, extra, highlight }) {
 // ── Tab: Por Variable ──────────────────────────────────────────────────────
 
 function TabVariable({ respuestas, variables }) {
-  // Build rows keyed by variable_id (fallback to variable name)
   const rows = useMemo(() => {
+    // Etapa 1 only: exclude criterios rows (variable_id contains "__")
+    const etapa1 = respuestas.filter((r) => !String(r.variable_id ?? "").includes("__"))
     const map = new Map()
-    respuestas.forEach((r) => {
+    etapa1.forEach((r) => {
       const key = r.variable_id ?? r.variable
       if (!map.has(key)) {
-        // Try to find matching variable definition
         const varDef = variables.find((v) => String(v.id) === String(r.variable_id)) || null
         map.set(key, {
           key,
           nombre: varDef ? varDef.nombre : r.variable,
           dimension: varDef ? varDef.dimension : r.dimension,
-          claridad: [],
-          relevancia: [],
-          coherencia: [],
+          claridad: [], relevancia: [], coherencia: [], pertinencia: [],
         })
       }
       const row = map.get(key)
-      if (r.claridad  != null) row.claridad.push(r.claridad)
-      if (r.relevancia != null) row.relevancia.push(r.relevancia)
-      if (r.coherencia != null) row.coherencia.push(r.coherencia)
+      if (r.claridad    != null) row.claridad.push(r.claridad)
+      if (r.relevancia  != null) row.relevancia.push(r.relevancia)
+      if (r.coherencia  != null) row.coherencia.push(r.coherencia)
+      if (r.pertinencia != null) row.pertinencia.push(r.pertinencia)
     })
     return Array.from(map.values()).map((row) => {
-      const c = avg(row.claridad)
-      const r = avg(row.relevancia)
-      const co = avg(row.coherencia)
-      const all = [...row.claridad, ...row.relevancia, ...row.coherencia]
+      const all = [...row.claridad, ...row.relevancia, ...row.coherencia, ...row.pertinencia]
       return {
         ...row,
-        n: Math.max(row.claridad.length, row.relevancia.length, row.coherencia.length),
-        avgClaridad: c,
-        avgRelevancia: r,
-        avgCoherencia: co,
+        n: Math.max(row.claridad.length, row.relevancia.length, row.coherencia.length, row.pertinencia.length),
+        avgClaridad:    avg(row.claridad),
+        avgRelevancia:  avg(row.relevancia),
+        avgCoherencia:  avg(row.coherencia),
+        avgPertinencia: avg(row.pertinencia),
         promedio: avg(all),
       }
     })
@@ -125,6 +122,7 @@ function TabVariable({ respuestas, variables }) {
             <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Claridad</th>
             <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Relevancia</th>
             <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Coherencia</th>
+            <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Pertinencia</th>
             <th className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Promedio</th>
           </tr>
         </thead>
@@ -146,6 +144,7 @@ function TabVariable({ respuestas, variables }) {
               <td className="py-3 px-4"><MiniBar value={row.avgClaridad} /></td>
               <td className="py-3 px-4"><MiniBar value={row.avgRelevancia} /></td>
               <td className="py-3 px-4"><MiniBar value={row.avgCoherencia} /></td>
+              <td className="py-3 px-4"><MiniBar value={row.avgPertinencia} /></td>
               <td className="py-3 px-4">
                 <span className={`text-xs font-bold px-2 py-1 rounded-lg ${scoreBg(row.promedio)}`}>
                   {row.promedio !== null ? round2(row.promedio) : "—"}
@@ -181,23 +180,27 @@ function DimensionBar({ label, value }) {
 
 function TabDimension({ respuestas }) {
   const dims = useMemo(() => {
+    // Etapa 1 only
+    const etapa1 = respuestas.filter((r) => !String(r.variable_id ?? "").includes("__"))
     const map = new Map()
-    respuestas.forEach((r) => {
+    etapa1.forEach((r) => {
       const key = r.dimension || "Sin dimensión"
-      if (!map.has(key)) map.set(key, { claridad: [], relevancia: [], coherencia: [] })
+      if (!map.has(key)) map.set(key, { claridad: [], relevancia: [], coherencia: [], pertinencia: [] })
       const d = map.get(key)
-      if (r.claridad  != null) d.claridad.push(r.claridad)
-      if (r.relevancia != null) d.relevancia.push(r.relevancia)
-      if (r.coherencia != null) d.coherencia.push(r.coherencia)
+      if (r.claridad    != null) d.claridad.push(r.claridad)
+      if (r.relevancia  != null) d.relevancia.push(r.relevancia)
+      if (r.coherencia  != null) d.coherencia.push(r.coherencia)
+      if (r.pertinencia != null) d.pertinencia.push(r.pertinencia)
     })
     return Array.from(map.entries()).map(([nombre, d]) => {
-      const all = [...d.claridad, ...d.relevancia, ...d.coherencia]
+      const all = [...d.claridad, ...d.relevancia, ...d.coherencia, ...d.pertinencia]
       return {
         nombre,
-        n: respuestas.filter((r) => (r.dimension || "Sin dimensión") === nombre).length,
-        avgClaridad: avg(d.claridad),
-        avgRelevancia: avg(d.relevancia),
-        avgCoherencia: avg(d.coherencia),
+        n: etapa1.filter((r) => (r.dimension || "Sin dimensión") === nombre).length,
+        avgClaridad:    avg(d.claridad),
+        avgRelevancia:  avg(d.relevancia),
+        avgCoherencia:  avg(d.coherencia),
+        avgPertinencia: avg(d.pertinencia),
         promedio: avg(all),
       }
     })
@@ -226,9 +229,10 @@ function TabDimension({ respuestas }) {
             </span>
           </div>
           <div className="space-y-3">
-            <DimensionBar label="Claridad"   value={d.avgClaridad} />
-            <DimensionBar label="Relevancia" value={d.avgRelevancia} />
-            <DimensionBar label="Coherencia" value={d.avgCoherencia} />
+            <DimensionBar label="Claridad"    value={d.avgClaridad} />
+            <DimensionBar label="Relevancia"  value={d.avgRelevancia} />
+            <DimensionBar label="Coherencia"  value={d.avgCoherencia} />
+            <DimensionBar label="Pertinencia" value={d.avgPertinencia} />
           </div>
         </div>
       ))}
@@ -240,16 +244,19 @@ function TabDimension({ respuestas }) {
 
 function TabEvaluador({ respuestas, totalVariables }) {
   const evaluadores = useMemo(() => {
+    // Etapa 1 only
+    const etapa1 = respuestas.filter((r) => !String(r.variable_id ?? "").includes("__"))
     const map = new Map()
-    respuestas.forEach((r) => {
+    etapa1.forEach((r) => {
       if (!map.has(r.session_id)) {
         map.set(r.session_id, { session_id: r.session_id, variables: new Set(), scores: [] })
       }
       const e = map.get(r.session_id)
       e.variables.add(r.variable_id ?? r.variable)
-      if (r.claridad  != null) e.scores.push(r.claridad)
-      if (r.relevancia != null) e.scores.push(r.relevancia)
-      if (r.coherencia != null) e.scores.push(r.coherencia)
+      if (r.claridad    != null) e.scores.push(r.claridad)
+      if (r.relevancia  != null) e.scores.push(r.relevancia)
+      if (r.coherencia  != null) e.scores.push(r.coherencia)
+      if (r.pertinencia != null) e.scores.push(r.pertinencia)
     })
     return Array.from(map.values()).map((e, i) => ({
       index: i + 1,
@@ -347,7 +354,8 @@ export default function ResultadosEvaluacion({ estudio, onBack }) {
     const evaluadores = new Set(respuestas.map((r) => r.session_id)).size
     const totalResp = respuestas.length
     const variablesEval = new Set(respuestas.map((r) => r.variable_id ?? r.variable)).size
-    const allScores = respuestas.flatMap((r) => [r.claridad, r.relevancia, r.coherencia].filter((v) => v != null))
+    const etapa1 = respuestas.filter((r) => !String(r.variable_id ?? "").includes("__"))
+    const allScores = etapa1.flatMap((r) => [r.claridad, r.relevancia, r.coherencia, r.pertinencia].filter((v) => v != null))
     const promedioGlobal = avg(allScores)
     return { evaluadores, totalResp, variablesEval, promedioGlobal }
   }, [respuestas])
