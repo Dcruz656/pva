@@ -244,51 +244,20 @@ function HistorialView() {
     setExpandedEvals((prev) => ({ ...prev, [sid]: !prev[sid] }))
   }
 
-  // Etapa 1 = variables (variable_id es numérico), Etapa 2 = criterios (variable_id tiene "__")
+  // ── Clasificadores ────────────────────────────────────────────────────────
   function getEtapa(r) {
     return String(r.variable_id ?? "").includes("__") ? 2 : 1
   }
-
-  function TableHead() {
-    const thBase = "px-4 py-2 text-xs font-bold uppercase tracking-wide text-on-surface-variant whitespace-nowrap"
-    return (
-      <thead className="bg-surface-container-high">
-        <tr>
-          <th rowSpan={2} className={`${thBase} py-3`}>Etapa</th>
-          <th rowSpan={2} className={`${thBase} py-3`}>Evaluación</th>
-          <th rowSpan={2} className={`${thBase} py-3`}>Criterio</th>
-          <th rowSpan={2} className={`${thBase} py-3`}>Variable</th>
-          <th colSpan={3} className="px-4 pt-2 pb-0 text-xs font-bold text-center text-primary border-b border-primary/30 whitespace-nowrap">
-            Atributos de Valoración
-          </th>
-          <th rowSpan={2} className={`${thBase} py-3`}>Estado</th>
-          <th rowSpan={2} className={`${thBase} py-3`}>Fecha</th>
-        </tr>
-        <tr>
-          {["Claridad", "Relevancia", "Coherencia"].map((h) => (
-            <th key={h} className={`${thBase} pt-1 pb-2`}>{h}</th>
-          ))}
-        </tr>
-      </thead>
-    )
+  function getIndice(r) {
+    if (getEtapa(r) === 2) return 1
+    const first = String(r.variable ?? "").match(/^([A-Z])/)?.[1] ?? ""
+    if (first === "S") return 2
+    if (first === "O") return 3
+    return 1
   }
 
-  function EtapaBadge({ etapa }) {
-    return etapa === 1
-      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 whitespace-nowrap">E1 Variables</span>
-      : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 whitespace-nowrap">E2 Criterios</span>
-  }
-
-  function EtapaGroupRow({ etapa, colSpan }) {
-    return (
-      <tr className={etapa === 1 ? "bg-blue-50" : "bg-indigo-50"}>
-        <td colSpan={colSpan} className={`px-4 py-2 text-xs font-bold uppercase tracking-widest ${etapa === 1 ? "text-blue-600" : "text-indigo-600"}`}>
-          {etapa === 1 ? "Etapa 1 — Evaluación de Variables" : "Etapa 2 — Evaluación de Criterios"}
-        </td>
-      </tr>
-    )
-  }
-
+  // ── Badges ────────────────────────────────────────────────────────────────
+  const EMOJI_FACES = ["", "😞", "🙁", "😐", "🙂", "😄"]
   function RatingBadge({ val }) {
     return (
       <span className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-bold ${
@@ -299,30 +268,117 @@ function HistorialView() {
       }`}>{val ?? "—"}</span>
     )
   }
-
-  function TableRow({ r, i }) {
-    const etapa = getEtapa(r)
+  function PertinenciaBadge({ val }) {
+    if (!val) return <span className="text-on-surface-variant text-sm">—</span>
+    return <span className="text-xl leading-none" title={`${val}/5`}>{EMOJI_FACES[val]}</span>
+  }
+  function EstadoBadge({ estado }) {
     return (
-      <tr key={r.id ?? i} className={`hover:bg-surface-container-low transition-colors ${etapa === 2 ? "bg-indigo-50/40" : ""}`}>
-        <td className="px-4 py-3"><EtapaBadge etapa={etapa} /></td>
-        <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[160px] truncate" title={estudioMap[r.estudio_id]}>
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+        estado === "enviado" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+      }`}>
+        <Icon name={estado === "enviado" ? "verified" : "draft"} className="text-xs" />
+        {estado}
+      </span>
+    )
+  }
+
+  // ── Cabeceras específicas ─────────────────────────────────────────────────
+  const thBase = "px-4 py-2 text-xs font-bold uppercase tracking-wide text-on-surface-variant whitespace-nowrap"
+
+  function HeadVars() {
+    return (
+      <thead className="bg-surface-container-high border-b border-outline-variant">
+        <tr>
+          <th rowSpan={2} className={`${thBase} py-3`}>Evaluación</th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Variable</th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Subdimensión</th>
+          <th colSpan={4} className="px-4 pt-2 pb-0 text-xs font-bold text-center text-primary border-b border-primary/30 whitespace-nowrap">
+            Atributos de Valoración
+          </th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Estado</th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Fecha</th>
+        </tr>
+        <tr>
+          {["Claridad", "Relevancia", "Coherencia", "Pertinencia"].map((h) => (
+            <th key={h} className={`${thBase} pt-1 pb-2`}>{h}</th>
+          ))}
+        </tr>
+      </thead>
+    )
+  }
+
+  function HeadCriterios() {
+    return (
+      <thead className="bg-surface-container-high border-b border-outline-variant">
+        <tr>
+          <th className={`${thBase} py-3`}>Evaluación</th>
+          <th className={`${thBase} py-3`}>Criterio</th>
+          <th className={`${thBase} py-3 text-center`}>Pertinencia</th>
+          <th className={`${thBase} py-3`}>Estado</th>
+          <th className={`${thBase} py-3`}>Fecha</th>
+        </tr>
+      </thead>
+    )
+  }
+
+  // ── Filas específicas ─────────────────────────────────────────────────────
+  function RowVars({ r }) {
+    return (
+      <tr className="hover:bg-surface-container-low transition-colors">
+        <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[140px] truncate" title={estudioMap[r.estudio_id]}>
           {estudioMap[r.estudio_id] ?? r.estudio_id?.substring(0, 8) + "…"}
         </td>
-        <td className="px-4 py-3 font-medium text-on-surface">{r.variable}</td>
+        <td className="px-4 py-3 font-medium text-on-surface text-sm">{r.variable}</td>
         <td className="px-4 py-3 text-on-surface-variant text-xs">{r.dimension}</td>
-        {["claridad", "relevancia", "coherencia"].map((f) => (
-          <td key={f} className="px-4 py-3 text-center"><RatingBadge val={r[f]} /></td>
-        ))}
-        <td className="px-4 py-3">
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
-            r.estado === "enviado" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
-          }`}>
-            <Icon name={r.estado === "enviado" ? "verified" : "draft"} className="text-xs" />
-            {r.estado}
-          </span>
-        </td>
+        <td className="px-4 py-3 text-center"><RatingBadge val={r.claridad} /></td>
+        <td className="px-4 py-3 text-center"><RatingBadge val={r.relevancia} /></td>
+        <td className="px-4 py-3 text-center"><RatingBadge val={r.coherencia} /></td>
+        <td className="px-4 py-3 text-center"><RatingBadge val={r.pertinencia} /></td>
+        <td className="px-4 py-3"><EstadoBadge estado={r.estado} /></td>
         <td className="px-4 py-3 text-on-surface-variant text-xs whitespace-nowrap">{formatDate(r.updated_at)}</td>
       </tr>
+    )
+  }
+
+  function RowCriterios({ r }) {
+    return (
+      <tr className="hover:bg-indigo-50/30 transition-colors">
+        <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[140px] truncate" title={estudioMap[r.estudio_id]}>
+          {estudioMap[r.estudio_id] ?? r.estudio_id?.substring(0, 8) + "…"}
+        </td>
+        <td className="px-4 py-3 font-medium text-on-surface text-sm">{r.variable}</td>
+        <td className="px-4 py-3 text-center"><PertinenciaBadge val={r.claridad} /></td>
+        <td className="px-4 py-3"><EstadoBadge estado={r.estado} /></td>
+        <td className="px-4 py-3 text-on-surface-variant text-xs whitespace-nowrap">{formatDate(r.updated_at)}</td>
+      </tr>
+    )
+  }
+
+  // ── Bloque de sección ─────────────────────────────────────────────────────
+  function SectionTable({ label, title, subtitle, headerBg, labelColor, rows, Head, Row }) {
+    if (rows.length === 0) return null
+    return (
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+        <div className={`${headerBg} px-5 py-3 flex items-center justify-between`}>
+          <div>
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${labelColor}`}>{label}</span>
+            <p className="font-bold text-white text-sm leading-tight">{title}</p>
+            {subtitle && <p className="text-xs text-white/70 mt-0.5">{subtitle}</p>}
+          </div>
+          <span className="text-xs font-bold text-white/80 bg-white/20 px-2.5 py-1 rounded-full">
+            {rows.length} registro{rows.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <Head />
+            <tbody className="divide-y divide-outline-variant">
+              {rows.map((r, i) => <Row key={r.id ?? i} r={r} />)}
+            </tbody>
+          </table>
+        </div>
+      </div>
     )
   }
 
@@ -440,13 +496,31 @@ function HistorialView() {
                   </div>
                 </button>
                 {isExpanded && (
-                  <div className="overflow-x-auto border-t border-outline-variant">
-                    <table className="w-full text-left text-sm">
-                      <TableHead />
-                      <tbody className="divide-y divide-outline-variant">
-                        {rows.map((r, i) => <TableRow key={r.id ?? i} r={r} i={i} />)}
-                      </tbody>
-                    </table>
+                  <div className="space-y-2 border-t border-outline-variant p-3">
+                    <SectionTable
+                      label="Índice 1 · Etapa 1" title="La biblioteca como espacio público" subtitle="Evaluación de variables"
+                      headerBg="bg-blue-600" labelColor="text-blue-200"
+                      rows={rows.filter((r) => getEtapa(r) === 1 && getIndice(r) === 1)}
+                      Head={HeadVars} Row={RowVars}
+                    />
+                    <SectionTable
+                      label="Índice 1 · Etapa 2" title="La biblioteca como espacio público" subtitle="Evaluación de criterios"
+                      headerBg="bg-indigo-600" labelColor="text-indigo-200"
+                      rows={rows.filter((r) => getEtapa(r) === 2)}
+                      Head={HeadCriterios} Row={RowCriterios}
+                    />
+                    <SectionTable
+                      label="Índice 2" title="La biblioteca como sujeto colectivo" subtitle="Evaluación de variables"
+                      headerBg="bg-purple-600" labelColor="text-purple-200"
+                      rows={rows.filter((r) => getIndice(r) === 2)}
+                      Head={HeadVars} Row={RowVars}
+                    />
+                    <SectionTable
+                      label="Índice 3" title="La biblioteca como objeto de debate y representación" subtitle="Evaluación de variables"
+                      headerBg="bg-violet-700" labelColor="text-violet-200"
+                      rows={rows.filter((r) => getIndice(r) === 3)}
+                      Head={HeadVars} Row={RowVars}
+                    />
                   </div>
                 )}
               </div>
@@ -454,29 +528,32 @@ function HistorialView() {
           })}
         </div>
       ) : (
-        /* ── Vista plana agrupada por etapa ── */
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <TableHead />
-              <tbody className="divide-y divide-outline-variant">
-                {(() => {
-                  const etapa1 = filtered.filter((r) => getEtapa(r) === 1)
-                  const etapa2 = filtered.filter((r) => getEtapa(r) === 2)
-                  const rows = []
-                  if (etapa1.length > 0) {
-                    rows.push(<EtapaGroupRow key="hdr1" etapa={1} colSpan={9} />)
-                    etapa1.forEach((r, i) => rows.push(<TableRow key={r.id ?? `e1-${i}`} r={r} i={i} />))
-                  }
-                  if (etapa2.length > 0) {
-                    rows.push(<EtapaGroupRow key="hdr2" etapa={2} colSpan={9} />)
-                    etapa2.forEach((r, i) => rows.push(<TableRow key={r.id ?? `e2-${i}`} r={r} i={i} />))
-                  }
-                  return rows
-                })()}
-              </tbody>
-            </table>
-          </div>
+        /* ── Vista plana: tablas separadas por índice y etapa ── */
+        <div className="space-y-4">
+          <SectionTable
+            label="Índice 1 · Etapa 1" title="La biblioteca como espacio público" subtitle="Evaluación de variables"
+            headerBg="bg-blue-600" labelColor="text-blue-200"
+            rows={filtered.filter((r) => getEtapa(r) === 1 && getIndice(r) === 1)}
+            Head={HeadVars} Row={RowVars}
+          />
+          <SectionTable
+            label="Índice 1 · Etapa 2" title="La biblioteca como espacio público" subtitle="Evaluación de criterios"
+            headerBg="bg-indigo-600" labelColor="text-indigo-200"
+            rows={filtered.filter((r) => getEtapa(r) === 2)}
+            Head={HeadCriterios} Row={RowCriterios}
+          />
+          <SectionTable
+            label="Índice 2" title="La biblioteca como sujeto colectivo" subtitle="Evaluación de variables"
+            headerBg="bg-purple-600" labelColor="text-purple-200"
+            rows={filtered.filter((r) => getIndice(r) === 2)}
+            Head={HeadVars} Row={RowVars}
+          />
+          <SectionTable
+            label="Índice 3" title="La biblioteca como objeto de debate y representación" subtitle="Evaluación de variables"
+            headerBg="bg-violet-700" labelColor="text-violet-200"
+            rows={filtered.filter((r) => getIndice(r) === 3)}
+            Head={HeadVars} Row={RowVars}
+          />
         </div>
       )}
     </div>

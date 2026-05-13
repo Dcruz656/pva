@@ -384,7 +384,7 @@ function ScreenWelcome({ estudio, onStart }) {
                 </div>
                 <p className="font-bold text-slate-800 text-base">Evaluación de Variables</p>
                 <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                  Valore cada variable del instrumento en tres criterios: <strong className="text-slate-700">Claridad</strong>, <strong className="text-slate-700">Relevancia</strong> y <strong className="text-slate-700">Coherencia</strong>, usando la escala numérica del 1 al 5.
+                  Valore cada variable en cuatro criterios: <strong className="text-slate-700">Claridad</strong>, <strong className="text-slate-700">Relevancia</strong>, <strong className="text-slate-700">Coherencia</strong> y <strong className="text-slate-700">Pertinencia</strong>, usando la escala numérica del 1 al 5.
                 </p>
                 {/* Escala numérica */}
                 <div className="mt-3 flex gap-1.5">
@@ -468,13 +468,14 @@ function ScreenWelcome({ estudio, onStart }) {
 // ── Tarjeta de variable ────────────────────────────────────────────────────
 
 function VariableCard({ variable, idx, rating, onChange }) {
-  const isComplete = rating.claridad && rating.relevancia && rating.coherencia
-  const filledCount = [rating.claridad, rating.relevancia, rating.coherencia].filter(Boolean).length
+  const isComplete = rating.claridad && rating.relevancia && rating.coherencia && rating.pertinencia
+  const filledCount = [rating.claridad, rating.relevancia, rating.coherencia, rating.pertinencia].filter(Boolean).length
 
   const CRITERIA = [
-    { field: "claridad",   label: "Claridad",   hint: "¿Qué tan claro es el enunciado?" },
-    { field: "relevancia", label: "Relevancia",  hint: "¿Es pertinente para el estudio?" },
-    { field: "coherencia", label: "Coherencia",  hint: "¿Es coherente con la dimensión?" },
+    { field: "claridad",    label: "Claridad",    hint: "¿Qué tan claro es el enunciado?" },
+    { field: "relevancia",  label: "Relevancia",  hint: "¿Es relevante para el estudio?" },
+    { field: "coherencia",  label: "Coherencia",  hint: "¿Es coherente con la dimensión?" },
+    { field: "pertinencia", label: "Pertinencia", hint: "¿Es pertinente para el objetivo?" },
   ]
 
   return (
@@ -521,7 +522,7 @@ function VariableCard({ variable, idx, rating, onChange }) {
               )
             })}
           </div>
-          <span className="text-xs text-slate-400">{filledCount}/3</span>
+          <span className="text-xs text-slate-400">{filledCount}/4</span>
         </div>
       </div>
 
@@ -601,7 +602,7 @@ function VariableCard({ variable, idx, rating, onChange }) {
       <div className="h-1.5 rounded-b-2xl overflow-hidden bg-slate-100">
         <div
           className={`h-1.5 transition-all duration-300 ${isComplete ? "bg-green-400" : "bg-primary/40"}`}
-          style={{ width: `${(filledCount / 3) * 100}%` }}
+          style={{ width: `${(filledCount / 4) * 100}%` }}
         />
       </div>
     </div>
@@ -616,7 +617,7 @@ function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
 
   const completedCount = variables.filter((v) => {
     const r = ratings[v.id]
-    return r?.claridad && r?.relevancia && r?.coherencia
+    return r?.claridad && r?.relevancia && r?.coherencia && r?.pertinencia
   }).length
   const incomplete = variables.length - completedCount
 
@@ -663,7 +664,7 @@ function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
               <div className="divide-y divide-slate-100">
                 {dimVars.map((v) => {
                   const r = ratings[v.id]
-                  const isComplete = r?.claridad && r?.relevancia && r?.coherencia
+                  const isComplete = r?.claridad && r?.relevancia && r?.coherencia && r?.pertinencia
                   return (
                     <div key={v.id} className="px-5 py-3 flex items-start gap-3">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -675,9 +676,10 @@ function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
                         <p className="text-sm font-medium text-slate-800 truncate">{v.nombre}</p>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {[
-                            { label: "Claridad",   val: r?.claridad },
-                            { label: "Relevancia", val: r?.relevancia },
-                            { label: "Coherencia", val: r?.coherencia },
+                            { label: "Claridad",    val: r?.claridad },
+                            { label: "Relevancia",  val: r?.relevancia },
+                            { label: "Coherencia",  val: r?.coherencia },
+                            { label: "Pertinencia", val: r?.pertinencia },
                           ].map(({ label, val }) => {
                             const lk = val ? LIKERT[val - 1] : null
                             return (
@@ -733,7 +735,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
 
   const [ratings, setRatings] = useState(
     Object.fromEntries(
-      variables.map((v) => [v.id, { claridad: null, relevancia: null, coherencia: null, observaciones: "" }])
+      variables.map((v) => [v.id, { claridad: null, relevancia: null, coherencia: null, pertinencia: null, observaciones: "" }])
     )
   )
   const [loadingExisting, setLoadingExisting] = useState(true)
@@ -749,7 +751,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
 
   const completedCount = variables.filter((v) => {
     const r = ratings[v.id]
-    return r?.claridad && r?.relevancia && r?.coherencia
+    return r?.claridad && r?.relevancia && r?.coherencia && r?.pertinencia
   }).length
   const progress = variables.length > 0 ? Math.round((completedCount / variables.length) * 100) : 0
   const allComplete = completedCount === variables.length
@@ -757,7 +759,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
   // Completados por dimensión
   const dimStats = dims.map((d) => {
     const dvars = variables.filter((v) => v.dimension === d)
-    const done = dvars.filter((v) => ratings[v.id]?.claridad && ratings[v.id]?.relevancia && ratings[v.id]?.coherencia).length
+    const done = dvars.filter((v) => ratings[v.id]?.claridad && ratings[v.id]?.relevancia && ratings[v.id]?.coherencia && ratings[v.id]?.pertinencia).length
     return { name: d, total: dvars.length, done }
   })
 
@@ -780,6 +782,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
                 claridad:      row.claridad      ?? null,
                 relevancia:    row.relevancia    ?? null,
                 coherencia:    row.coherencia    ?? null,
+                pertinencia:   row.pertinencia   ?? null,
                 observaciones: row.observaciones ?? "",
               }
               if (!latest || row.updated_at > latest) latest = row.updated_at
@@ -829,7 +832,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
   // Variable siguiente sin completar
   const nextIncomplete = variables.find((v) => {
     const r = ratings[v.id]
-    return !r?.claridad || !r?.relevancia || !r?.coherencia
+    return !r?.claridad || !r?.relevancia || !r?.coherencia || !r?.pertinencia
   })
 
   const notify = useCallback((type, msg) => {
@@ -851,6 +854,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
       claridad:      ratings[v.id].claridad,
       relevancia:    ratings[v.id].relevancia,
       coherencia:    ratings[v.id].coherencia,
+      pertinencia:   ratings[v.id].pertinencia,
       observaciones: ratings[v.id].observaciones || null,
       estado,
     }))
@@ -991,7 +995,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
                 </div>
                 <p className="text-white font-bold text-base leading-tight">Evaluación de Variables</p>
                 <p className="text-white/70 text-xs mt-0.5">
-                  Valore <strong className="text-white/90">Claridad</strong>, <strong className="text-white/90">Relevancia</strong> y <strong className="text-white/90">Coherencia</strong> de cada variable — escala numérica 1 a 5
+                  Valore <strong className="text-white/90">Claridad</strong>, <strong className="text-white/90">Relevancia</strong>, <strong className="text-white/90">Coherencia</strong> y <strong className="text-white/90">Pertinencia</strong> de cada variable — escala numérica 1 a 5
                 </p>
               </div>
             </div>
