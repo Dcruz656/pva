@@ -244,11 +244,17 @@ function HistorialView() {
     setExpandedEvals((prev) => ({ ...prev, [sid]: !prev[sid] }))
   }
 
+  // Etapa 1 = variables (variable_id es numérico), Etapa 2 = criterios (variable_id tiene "__")
+  function getEtapa(r) {
+    return String(r.variable_id ?? "").includes("__") ? 2 : 1
+  }
+
   function TableHead() {
     const thBase = "px-4 py-2 text-xs font-bold uppercase tracking-wide text-on-surface-variant whitespace-nowrap"
     return (
       <thead className="bg-surface-container-high">
         <tr>
+          <th rowSpan={2} className={`${thBase} py-3`}>Etapa</th>
           <th rowSpan={2} className={`${thBase} py-3`}>Evaluación</th>
           <th rowSpan={2} className={`${thBase} py-3`}>Criterio</th>
           <th rowSpan={2} className={`${thBase} py-3`}>Variable</th>
@@ -267,6 +273,22 @@ function HistorialView() {
     )
   }
 
+  function EtapaBadge({ etapa }) {
+    return etapa === 1
+      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 whitespace-nowrap">E1 Variables</span>
+      : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 whitespace-nowrap">E2 Criterios</span>
+  }
+
+  function EtapaGroupRow({ etapa, colSpan }) {
+    return (
+      <tr className={etapa === 1 ? "bg-blue-50" : "bg-indigo-50"}>
+        <td colSpan={colSpan} className={`px-4 py-2 text-xs font-bold uppercase tracking-widest ${etapa === 1 ? "text-blue-600" : "text-indigo-600"}`}>
+          {etapa === 1 ? "Etapa 1 — Evaluación de Variables" : "Etapa 2 — Evaluación de Criterios"}
+        </td>
+      </tr>
+    )
+  }
+
   function RatingBadge({ val }) {
     return (
       <span className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-bold ${
@@ -279,8 +301,10 @@ function HistorialView() {
   }
 
   function TableRow({ r, i }) {
+    const etapa = getEtapa(r)
     return (
-      <tr key={r.id ?? i} className="hover:bg-surface-container-low transition-colors">
+      <tr key={r.id ?? i} className={`hover:bg-surface-container-low transition-colors ${etapa === 2 ? "bg-indigo-50/40" : ""}`}>
+        <td className="px-4 py-3"><EtapaBadge etapa={etapa} /></td>
         <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[160px] truncate" title={estudioMap[r.estudio_id]}>
           {estudioMap[r.estudio_id] ?? r.estudio_id?.substring(0, 8) + "…"}
         </td>
@@ -430,13 +454,26 @@ function HistorialView() {
           })}
         </div>
       ) : (
-        /* ── Vista plana ── */
+        /* ── Vista plana agrupada por etapa ── */
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <TableHead />
               <tbody className="divide-y divide-outline-variant">
-                {filtered.map((r, i) => <TableRow key={r.id ?? i} r={r} i={i} />)}
+                {(() => {
+                  const etapa1 = filtered.filter((r) => getEtapa(r) === 1)
+                  const etapa2 = filtered.filter((r) => getEtapa(r) === 2)
+                  const rows = []
+                  if (etapa1.length > 0) {
+                    rows.push(<EtapaGroupRow key="hdr1" etapa={1} colSpan={9} />)
+                    etapa1.forEach((r, i) => rows.push(<TableRow key={r.id ?? `e1-${i}`} r={r} i={i} />))
+                  }
+                  if (etapa2.length > 0) {
+                    rows.push(<EtapaGroupRow key="hdr2" etapa={2} colSpan={9} />)
+                    etapa2.forEach((r, i) => rows.push(<TableRow key={r.id ?? `e2-${i}`} r={r} i={i} />))
+                  }
+                  return rows
+                })()}
               </tbody>
             </table>
           </div>
