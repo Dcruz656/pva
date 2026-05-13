@@ -1,9 +1,15 @@
 /**
  * Datos precargados del instrumento de evaluación.
- * Dimensión principal: La biblioteca como espacio público
+ * Índice 1: La biblioteca como espacio público
+ * Índice 2: La biblioteca como sujeto colectivo
  */
 
 export const DIMENSION_PRINCIPAL = "La biblioteca como espacio público"
+
+export const INDICES = [
+  { id: 1, nombre: "La biblioteca como espacio público" },
+  { id: 2, nombre: "La biblioteca como sujeto colectivo" },
+]
 
 export const SUBDIMENSIONES = [
   {
@@ -249,9 +255,47 @@ export const SUBDIMENSIONES = [
   },
 ]
 
-/** Devuelve el objeto de catálogo de una variable por su clave */
+export const SUBDIMENSIONES_INDICE2 = [
+  {
+    id: "comunidad_agente",
+    nombre: "La comunidad como agente",
+    descripcion: "Variables que miden el grado en que la comunidad actúa como agente activo en la configuración y sostenibilidad de la biblioteca",
+    indice: 2,
+    variables: [
+      {
+        clave: "SC1",
+        nombre: "SC1. Participación",
+        descripcion: "Grado en que la comunidad interviene activamente en la configuración, toma de decisiones y aprovechamiento de la biblioteca, incidiendo de manera directa en su diseño, funcionamiento y evolución.",
+        criterios: [],
+      },
+      {
+        clave: "SC2",
+        nombre: "SC2. Acciones de agencia",
+        descripcion: "Capacidad de la comunidad para ejercer influencia efectiva y deliberada en la gobernanza y evaluación de la biblioteca, expresando sus intereses, necesidades y propuestas.",
+        criterios: [],
+      },
+      {
+        clave: "SC3",
+        nombre: "SC3. Donaciones",
+        descripcion: "Contribuciones voluntarias de la comunidad que fortalecen los recursos, infraestructura y sostenibilidad de la biblioteca, tanto de manera directa como mediante la gestión de apoyos externos.",
+        criterios: [],
+      },
+      {
+        clave: "SC4",
+        nombre: "SC4. Proyección pública",
+        descripcion: "Capacidad de la comunidad para visibilizar, posicionar y amplificar el valor de la biblioteca en el entorno social, promoviendo su reconocimiento como espacio de transformación comunitaria.",
+        criterios: [],
+      },
+    ],
+  },
+]
+
+/** Todas las subdimensiones de todos los índices */
+export const TODAS_SUBDIMENSIONES = [...SUBDIMENSIONES, ...SUBDIMENSIONES_INDICE2]
+
+/** Devuelve el objeto de catálogo de una variable por su clave (busca en todos los índices) */
 export function findVarData(clave) {
-  for (const sub of SUBDIMENSIONES) {
+  for (const sub of TODAS_SUBDIMENSIONES) {
     const v = sub.variables.find((v) => v.clave === clave)
     if (v) return v
   }

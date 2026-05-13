@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react"
 import { supabase } from "../lib/supabase"
-import { findVarData, SUBDIMENSIONES } from "../lib/variablesData"
+import { findVarData, TODAS_SUBDIMENSIONES as SUBDIMENSIONES } from "../lib/variablesData"
 
 const LIKERT = [
   { n: 1, label: "Totalmente en desacuerdo", short: "Muy bajo",  color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",   dot: "bg-red-400"   } },
