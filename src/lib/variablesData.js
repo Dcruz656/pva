@@ -504,6 +504,44 @@ export const SUBDIMENSIONES_INDICE3 = [
       },
     ],
   },
+  {
+    id: "representaciones_artisticas",
+    nombre: "Representaciones artísticas",
+    descripcion: "Tipos de acciones artísticas que promueven una imagen de la biblioteca.",
+    indice: 3,
+    variables: [
+      {
+        clave: "OR1",
+        nombre: "OR1. Narraciones (visuales, orales y escritas)",
+        descripcion: "Representaciones de bibliotecas, bibliotecarios y usuarios en literatura, cine, artes visuales o narrativas orales que construyen modelos espaciales, de gestión y de uso, influyendo en la percepción pública y cultural de las bibliotecas.",
+        criterios: [],
+      },
+      {
+        clave: "OR2",
+        nombre: "OR2. Performance y artes escénicas",
+        descripcion: "Intervenciones escénicas o performativas que cuestionan normas institucionales, presentan modelos alternativos de gestión o transforman el espacio y la experiencia del usuario dentro de la biblioteca.",
+        criterios: [],
+      },
+      {
+        clave: "OR3",
+        nombre: "OR3. Muralismo/arte urbano",
+        descripcion: "Intervenciones artísticas en fachadas, espacios exteriores o interiores de la biblioteca que resignifican el espacio, generan identidad cultural y cuestionan o promueven modelos de gestión y uso.",
+        criterios: [],
+      },
+      {
+        clave: "OR4",
+        nombre: "OR4. Ferias y exposiciones",
+        descripcion: "Instalaciones, exposiciones o eventos culturales que transforman la biblioteca en un espacio de difusión artística, modificando su organización espacial, gestión y modalidades de uso.",
+        criterios: [],
+      },
+      {
+        clave: "OR5",
+        nombre: "OR5. Presentaciones y festivales",
+        descripcion: "Actividades temporales, festivales o eventos culturales que expanden la biblioteca más allá de sus muros, rompiendo usos tradicionales y fomentando participación activa de la comunidad.",
+        criterios: [],
+      },
+    ],
+  },
 ]
 
 /** Todas las subdimensiones de todos los índices */
