@@ -466,6 +466,44 @@ export const SUBDIMENSIONES_INDICE3 = [
       },
     ],
   },
+  {
+    id: "alianzas_estrategicas",
+    nombre: "Alianzas estratégicas con otros entes",
+    descripcion: "Tipos de alianzas y estrategias que se realizan y discuten para aumentar el alcance y la visibilidad de las bibliotecas.",
+    indice: 3,
+    variables: [
+      {
+        clave: "OA1",
+        nombre: "OA1. Relaciones con autoridades locales",
+        descripcion: "Acciones de articulación con gobiernos locales y autoridades que buscan integrar a la biblioteca en proyectos urbanos, sociales y de desarrollo comunitario, garantizando sostenibilidad y acceso ciudadano.",
+        criterios: [],
+      },
+      {
+        clave: "OA2",
+        nombre: "OA2. Participación en presupuestos públicos",
+        descripcion: "Participación de las bibliotecas y sus actores en la asignación, planificación y gestión de recursos financieros públicos para infraestructura, programas y fortalecimiento institucional.",
+        criterios: [],
+      },
+      {
+        clave: "OA3",
+        nombre: "OA3. Vinculación biblioteca-comunidad",
+        descripcion: "Alianzas y colaboración directa con la comunidad para proyectos de innovación, voluntariado y ampliación de funciones, fortaleciendo la relación entre biblioteca y usuarios.",
+        criterios: [],
+      },
+      {
+        clave: "OA4",
+        nombre: "OA4. Alianzas con organizaciones civiles e instituciones educativas",
+        descripcion: "Convenios y acuerdos con escuelas, ONGs y redes educativas que fomentan el acceso a bibliotecas, recursos educativos, extensión cultural y programas de alfabetización informacional.",
+        criterios: [],
+      },
+      {
+        clave: "OA5",
+        nombre: "OA5. Alianzas con empresas",
+        descripcion: "Acuerdos estratégicos con empresas privadas para construcción, equipamiento, financiamiento de programas y formación profesional, buscando ampliar recursos y atraer nuevos públicos.",
+        criterios: [],
+      },
+    ],
+  },
 ]
 
 /** Todas las subdimensiones de todos los índices */
