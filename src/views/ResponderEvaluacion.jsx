@@ -422,7 +422,7 @@ function ScreenWelcome({ estudio, onStart }) {
                   </div>
                   <p className="font-bold text-slate-800 text-base">Evaluación de Criterios</p>
                   <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                    Evalúe la <strong className="text-slate-700">pertinencia</strong> de cada criterio para explicar su variable asociada, usando la escala de emojis.
+                    Evalúe la <strong className="text-slate-700">pertinencia</strong> de cada criterio para explicar su variable asociada, usando la escala numérica del 1 al 5.
                   </p>
                   {/* Escala emoji */}
                   <div className="mt-3 flex gap-1.5">
@@ -1250,7 +1250,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
             </div>
             <h2 className="font-bold text-xl text-white">Evaluación de Criterios</h2>
             <p className="text-sm text-white/70 mt-1 leading-relaxed">
-              Evalúe la <strong className="text-white/90">pertinencia</strong> de cada criterio para explicar su variable asociada, usando la escala de emojis.
+              Evalúe la <strong className="text-white/90">pertinencia</strong> de cada criterio para explicar su variable asociada, usando la escala numérica del 1 al 5.
             </p>
           </div>
           <div className="grid grid-cols-2 divide-x divide-slate-100">
@@ -1270,13 +1270,12 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
         {/* Escala de referencia */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Escala de valoración</p>
-          <div className="flex gap-2">
-            {LIKERT_FACES.map(({ n, emoji, label, border, bg, text }) => (
-              <div key={n} className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 ${border} ${bg}`}>
-                <span className="text-xl leading-none">{emoji}</span>
-                <span className={`text-sm font-bold ${text}`}>{n}</span>
-                <span className={`text-[10px] text-center leading-tight hidden sm:block ${text}`}>
-                  {label.split(" ").slice(0, 2).join(" ")}
+          <div className="flex gap-1.5">
+            {LIKERT.map(({ n, label, color }) => (
+              <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
+                <span className={`text-sm font-bold ${color.text}`}>{n}</span>
+                <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>
+                  {label.split(" ")[0]}
                 </span>
               </div>
             ))}
@@ -1286,7 +1285,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
         {/* Tarjetas de criterios */}
         {criterios.map((c, idx) => {
           const val = ratings[c.id]
-          const selected = val ? LIKERT_FACES[val - 1] : null
+          const selectedLK = val ? LIKERT[val - 1] : null
           return (
             <div
               key={c.id}
@@ -1311,31 +1310,34 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
                     )}
                   </div>
                 </div>
-                {selected && (
-                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold ${selected.border} ${selected.bg} ${selected.text}`}>
-                    <span className="text-base leading-none">{selected.emoji}</span>
-                    {selected.label}
+                {selectedLK && (
+                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold ${selectedLK.color.border} ${selectedLK.color.bg} ${selectedLK.color.text}`}>
+                    <span className="font-bold">{val}</span>
+                    {selectedLK.short}
                   </div>
                 )}
               </div>
 
               {/* Escala */}
               <div className="px-5 py-4">
-                <div className="grid grid-cols-5 gap-2">
-                  {LIKERT_FACES.map(({ n, emoji, label, border, bg, text }) => {
+                <div className="grid grid-cols-5 gap-1.5">
+                  {LIKERT.map(({ n, label: fullLabel, color }) => {
                     const isSelected = val === n
                     return (
                       <label
                         key={n}
-                        title={label}
-                        className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
-                          isSelected ? `${border} ${bg}` : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                        }`}
+                        title={fullLabel}
+                        className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 cursor-pointer transition-all select-none
+                          ${isSelected
+                            ? `${color.border} ${color.bg}`
+                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                          }`}
                       >
-                        <span className="text-2xl leading-none">{emoji}</span>
-                        <span className={`text-sm font-bold leading-none ${isSelected ? text : "text-slate-400"}`}>{n}</span>
-                        <span className={`text-[10px] text-center leading-tight hidden sm:block ${isSelected ? text : "text-slate-300"}`}>
-                          {label.split(" ").slice(0, 2).join(" ")}
+                        <span className={`text-base font-bold leading-none transition-colors ${isSelected ? color.text : "text-slate-400"}`}>
+                          {n}
+                        </span>
+                        <span className={`text-[10px] leading-none font-medium hidden sm:block transition-colors ${isSelected ? color.text : "text-slate-300"}`}>
+                          {n === 1 ? "Bajo" : n === 2 ? "Regular" : n === 3 ? "Medio" : n === 4 ? "Alto" : "Óptimo"}
                         </span>
                         <input
                           type="radio"
@@ -1495,7 +1497,7 @@ function ScreenTransition({ estudio, criterios, onContinue }) {
             <p className="text-sm text-white/75 mt-2 leading-relaxed">
               En esta etapa usted evaluará la <strong className="text-white">pertinencia</strong> de cada criterio
               para explicar su variable asociada. Por cada criterio deberá indicar qué tan apropiado
-              es para describir o medir la variable, usando la escala de emojis del 1 al 5.
+              es para describir o medir la variable, usando la escala numérica del 1 al 5.
             </p>
           </div>
 
@@ -1534,11 +1536,11 @@ function ScreenTransition({ estudio, criterios, onContinue }) {
           {/* Escala de referencia */}
           <div className="px-5 pb-5">
             <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Escala de esta etapa</p>
-            <div className="flex gap-2">
-              {LIKERT_FACES.map(({ n, emoji, label, border, bg, text }) => (
-                <div key={n} className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border-2 ${border} ${bg}`}>
-                  <span className="text-lg leading-none">{emoji}</span>
-                  <span className={`text-xs font-bold ${text}`}>{n}</span>
+            <div className="flex gap-1.5">
+              {LIKERT.map(({ n, label, color }) => (
+                <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
+                  <span className={`text-sm font-bold ${color.text}`}>{n}</span>
+                  <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{label.split(" ")[0]}</span>
                 </div>
               ))}
             </div>
