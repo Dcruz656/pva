@@ -244,7 +244,28 @@ function HistorialView() {
     setExpandedEvals((prev) => ({ ...prev, [sid]: !prev[sid] }))
   }
 
-  const TABLE_HEADERS = ["Evaluación", "Criterio", "Variable", "Claridad", "Relevancia", "Coherencia", "Estado", "Fecha"]
+  function TableHead() {
+    const thBase = "px-4 py-2 text-xs font-bold uppercase tracking-wide text-on-surface-variant whitespace-nowrap"
+    return (
+      <thead className="bg-surface-container-high">
+        <tr>
+          <th rowSpan={2} className={`${thBase} py-3`}>Evaluación</th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Criterio</th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Variable</th>
+          <th colSpan={3} className="px-4 pt-2 pb-0 text-xs font-bold text-center text-primary border-b border-primary/30 whitespace-nowrap">
+            Atributos de Valoración
+          </th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Estado</th>
+          <th rowSpan={2} className={`${thBase} py-3`}>Fecha</th>
+        </tr>
+        <tr>
+          {["Claridad", "Relevancia", "Coherencia"].map((h) => (
+            <th key={h} className={`${thBase} pt-1 pb-2`}>{h}</th>
+          ))}
+        </tr>
+      </thead>
+    )
+  }
 
   function RatingBadge({ val }) {
     return (
@@ -397,13 +418,7 @@ function HistorialView() {
                 {isExpanded && (
                   <div className="overflow-x-auto border-t border-outline-variant">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-surface-container-high">
-                        <tr>
-                          {TABLE_HEADERS.map((h) => (
-                            <th key={h} className="px-4 py-2 text-xs font-bold uppercase tracking-wide text-on-surface-variant whitespace-nowrap">{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
+                      <TableHead />
                       <tbody className="divide-y divide-outline-variant">
                         {rows.map((r, i) => <TableRow key={r.id ?? i} r={r} i={i} />)}
                       </tbody>
@@ -419,13 +434,7 @@ function HistorialView() {
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-surface-container-high border-b border-outline-variant">
-                <tr>
-                  {TABLE_HEADERS.map((h) => (
-                    <th key={h} className="px-4 py-3 text-xs font-bold uppercase tracking-wide text-on-surface-variant whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
+              <TableHead />
               <tbody className="divide-y divide-outline-variant">
                 {filtered.map((r, i) => <TableRow key={r.id ?? i} r={r} i={i} />)}
               </tbody>
