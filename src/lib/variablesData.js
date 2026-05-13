@@ -288,6 +288,62 @@ export const SUBDIMENSIONES_INDICE2 = [
       },
     ],
   },
+  {
+    id: "personal_agente",
+    nombre: "Personal bibliotecario como agente",
+    descripcion: "Formas de actuar y defender los intereses, derechos y necesidades de la comunidad, más allá del perfil de puesto.",
+    indice: 2,
+    variables: [
+      {
+        clave: "SB1",
+        nombre: "SB1. Procesos participativos (Co-creación)",
+        descripcion: "Capacidad del personal bibliotecario para involucrar activamente a la comunidad en la toma de decisiones, promoviendo procesos colaborativos que influyen en el diseño, gestión y uso de la biblioteca.",
+        criterios: [],
+      },
+      {
+        clave: "SB2",
+        nombre: "SB2. Creación de públicos",
+        descripcion: "Conjunto de acciones orientadas a diversificar y ampliar la base de usuarios, integrando a públicos no tradicionales mediante el rediseño de espacios, servicios y actividades relevantes.",
+        criterios: [],
+      },
+      {
+        clave: "SB3",
+        nombre: "SB3. Laboratorios sociales",
+        descripcion: "Capacidad del personal para convertir la biblioteca en un espacio de experimentación, innovación y creación colectiva donde la comunidad desarrolla soluciones a problemáticas sociales y culturales.",
+        criterios: [],
+      },
+      {
+        clave: "SB4",
+        nombre: "SB4. Activismo del espacio",
+        descripcion: "Uso estratégico del espacio bibliotecario (interno y externo) como herramienta de transformación social, orientado a atraer nuevos públicos y activar dinámicas comunitarias.",
+        criterios: [],
+      },
+      {
+        clave: "SB5",
+        nombre: "SB5. Colaboración",
+        descripcion: "Habilidad del personal bibliotecario para establecer alianzas estratégicas con actores locales, organizaciones y redes profesionales que fortalecen el impacto social y político de la biblioteca.",
+        criterios: [],
+      },
+      {
+        clave: "SB6",
+        nombre: "SB6. Proyección pública",
+        descripcion: "Capacidad del personal para posicionar la biblioteca como un actor relevante en el espacio público mediante estrategias de comunicación, visibilidad y liderazgo cultural.",
+        criterios: [],
+      },
+      {
+        clave: "SB7",
+        nombre: "SB7. Narrativas de valor",
+        descripcion: "Capacidad de construir, comunicar y evidenciar el impacto social de la biblioteca a través de relatos, indicadores y representaciones que reflejan su valor en la comunidad.",
+        criterios: [],
+      },
+      {
+        clave: "SB8",
+        nombre: "SB8. Implicación/intervención pública",
+        descripcion: "Nivel de compromiso del personal bibliotecario en la defensa de derechos, inclusión social y participación en causas comunitarias más allá de sus funciones tradicionales.",
+        criterios: [],
+      },
+    ],
+  },
 ]
 
 /** Todas las subdimensiones de todos los índices */
