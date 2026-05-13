@@ -168,6 +168,8 @@ function HistorialView() {
   const [filterEstado, setFilterEstado] = useState("todos")
   const [groupByEval, setGroupByEval] = useState(false)
   const [expandedEvals, setExpandedEvals] = useState({})
+  const [deletingId, setDeletingId] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   // Carga inicial
   useEffect(() => {
@@ -244,6 +246,16 @@ function HistorialView() {
     setExpandedEvals((prev) => ({ ...prev, [sid]: !prev[sid] }))
   }
 
+  async function handleDelete(id) {
+    setDeletingId(id)
+    const { error } = await supabase.from("respuestas").delete().eq("id", id)
+    if (!error) {
+      setRecords((prev) => prev.filter((r) => r.id !== id))
+    }
+    setDeletingId(null)
+    setConfirmDeleteId(null)
+  }
+
   // ── Clasificadores ────────────────────────────────────────────────────────
   function getEtapa(r) {
     return String(r.variable_id ?? "").includes("__") ? 2 : 1
@@ -298,6 +310,7 @@ function HistorialView() {
           </th>
           <th rowSpan={2} className={`${thBase} py-3`}>Estado</th>
           <th rowSpan={2} className={`${thBase} py-3`}>Fecha</th>
+          <th rowSpan={2} className={`${thBase} py-3`}></th>
         </tr>
         <tr>
           {["Claridad", "Relevancia", "Coherencia", "Pertinencia"].map((h) => (
@@ -317,12 +330,52 @@ function HistorialView() {
           <th className={`${thBase} py-3 text-center`}>Pertinencia</th>
           <th className={`${thBase} py-3`}>Estado</th>
           <th className={`${thBase} py-3`}>Fecha</th>
+          <th className={`${thBase} py-3`}></th>
         </tr>
       </thead>
     )
   }
 
   // ── Filas específicas ─────────────────────────────────────────────────────
+  function DeleteCell({ id }) {
+    const isConfirming = confirmDeleteId === id
+    const isDeleting   = deletingId === id
+    if (isDeleting) return (
+      <td className="px-3 py-3 text-center">
+        <Icon name="hourglass_empty" className="text-base text-on-surface-variant animate-spin" />
+      </td>
+    )
+    if (isConfirming) return (
+      <td className="px-3 py-3">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleDelete(id)}
+            className="px-2 py-1 rounded-lg bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
+          >
+            Sí
+          </button>
+          <button
+            onClick={() => setConfirmDeleteId(null)}
+            className="px-2 py-1 rounded-lg border border-outline-variant text-on-surface-variant text-xs hover:bg-surface-container transition-colors"
+          >
+            No
+          </button>
+        </div>
+      </td>
+    )
+    return (
+      <td className="px-3 py-3 text-center">
+        <button
+          onClick={() => setConfirmDeleteId(id)}
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-red-50 hover:text-red-500 transition-colors"
+          title="Eliminar registro"
+        >
+          <Icon name="delete" className="text-base" />
+        </button>
+      </td>
+    )
+  }
+
   function RowVars({ r }) {
     return (
       <tr className="hover:bg-surface-container-low transition-colors">
@@ -337,6 +390,7 @@ function HistorialView() {
         <td className="px-4 py-3 text-center"><RatingBadge val={r.pertinencia} /></td>
         <td className="px-4 py-3"><EstadoBadge estado={r.estado} /></td>
         <td className="px-4 py-3 text-on-surface-variant text-xs whitespace-nowrap">{formatDate(r.updated_at)}</td>
+        <DeleteCell id={r.id} />
       </tr>
     )
   }
@@ -351,6 +405,7 @@ function HistorialView() {
         <td className="px-4 py-3 text-center"><PertinenciaBadge val={r.claridad} /></td>
         <td className="px-4 py-3"><EstadoBadge estado={r.estado} /></td>
         <td className="px-4 py-3 text-on-surface-variant text-xs whitespace-nowrap">{formatDate(r.updated_at)}</td>
+        <DeleteCell id={r.id} />
       </tr>
     )
   }
