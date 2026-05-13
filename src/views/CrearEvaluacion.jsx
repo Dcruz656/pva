@@ -123,7 +123,7 @@ function StepVariables({ variables, onChange }) {
       <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3">
         <Icon name="account_balance" className="text-primary text-xl flex-shrink-0" />
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-primary/60">Índice</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-primary/60">Índice 1</p>
           <p className="font-bold text-primary text-sm">{DIMENSION_PRINCIPAL}</p>
         </div>
       </div>
