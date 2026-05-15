@@ -514,11 +514,11 @@ function ScreenWelcome({ estudio, onStart }) {
                     Evalúe la <strong className="text-slate-700">pertinencia</strong> de cada criterio
                     para explicar su variable asociada — misma escala numérica del 1 al 5.
                   </p>
-                  <div className="mt-3 flex gap-1.5">
+                  <div className="mt-3 flex flex-col gap-1">
                     {LIKERT.map(({ n, label, color }) => (
-                      <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
-                        <span className={`text-sm font-bold ${color.text}`}>{n}</span>
-                        <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{label.split(" ")[0]}</span>
+                      <div key={n} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border ${color.border} ${color.bg}`}>
+                        <span className={`text-sm font-bold w-5 text-center flex-shrink-0 ${color.text}`}>{n}</span>
+                        <span className={`text-xs ${color.text}`}>{label}</span>
                       </div>
                     ))}
                   </div>
