@@ -18,15 +18,15 @@ function round2(n) {
 
 function scoreColor(val) {
   if (val === null) return "bg-slate-300"
-  if (val >= 4) return "bg-green-500"
-  if (val >= 3) return "bg-amber-400"
+  if (val <= 2) return "bg-green-500"
+  if (val <= 3) return "bg-amber-400"
   return "bg-red-500"
 }
 
 function scoreBg(val) {
   if (val === null) return ""
-  if (val >= 4) return "bg-green-50 text-green-800"
-  if (val >= 3) return "bg-amber-50 text-amber-800"
+  if (val <= 2) return "bg-green-50 text-green-800"
+  if (val <= 3) return "bg-amber-50 text-amber-800"
   return "bg-red-50 text-red-800"
 }
 
@@ -362,9 +362,9 @@ export default function ResultadosEvaluacion({ estudio, onBack }) {
 
   const promedioHighlight = kpis.promedioGlobal === null
     ? "bg-surface-container-lowest border-outline-variant text-on-surface"
-    : kpis.promedioGlobal >= 4
+    : kpis.promedioGlobal <= 2
       ? "bg-green-600 border-green-700 text-white"
-      : kpis.promedioGlobal >= 3
+      : kpis.promedioGlobal <= 3
         ? "bg-amber-400 border-amber-500 text-amber-900"
         : "bg-red-500 border-red-600 text-white"
 

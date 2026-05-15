@@ -7,11 +7,11 @@ import { supabase } from "../lib/supabase"
 import { findVarData, TODAS_SUBDIMENSIONES as SUBDIMENSIONES } from "../lib/variablesData"
 
 const LIKERT = [
-  { n: 1, label: "Totalmente en desacuerdo", short: "Muy bajo",  color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",   dot: "bg-red-400"   } },
-  { n: 2, label: "En desacuerdo",            short: "Bajo",      color: { border: "border-orange-400", bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-400" } },
-  { n: 3, label: "Neutral",                  short: "Regular",   color: { border: "border-amber-400",  bg: "bg-amber-50",  text: "text-amber-600",  dot: "bg-amber-400"  } },
-  { n: 4, label: "De acuerdo",               short: "Alto",      color: { border: "border-lime-500",   bg: "bg-lime-50",   text: "text-lime-700",   dot: "bg-lime-500"   } },
-  { n: 5, label: "Totalmente de acuerdo",    short: "Muy alto",  color: { border: "border-green-500",  bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500"  } },
+  { n: 1, label: "Totalmente de acuerdo",     short: "T. acuerdo",   emoji: "😄", color: { border: "border-green-500",  bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500"  } },
+  { n: 2, label: "De acuerdo",                short: "Acuerdo",      emoji: "🙂", color: { border: "border-lime-500",   bg: "bg-lime-50",   text: "text-lime-700",   dot: "bg-lime-500"   } },
+  { n: 3, label: "Indiferente o neutro",      short: "Indiferente",  emoji: "😐", color: { border: "border-amber-400",  bg: "bg-amber-50",  text: "text-amber-600",  dot: "bg-amber-400"  } },
+  { n: 4, label: "En desacuerdo",             short: "Desacuerdo",   emoji: "🙁", color: { border: "border-orange-400", bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-400" } },
+  { n: 5, label: "Totalmente en desacuerdo",  short: "T. desacuerdo",emoji: "😞", color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",    dot: "bg-red-400"    } },
 ]
 
 const LIKERT_FACES = [
@@ -1515,7 +1515,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
               {/* Escala */}
               <div className="px-5 py-4">
                 <div className="grid grid-cols-5 gap-1.5">
-                  {LIKERT.map(({ n, label: fullLabel, short, color }) => {
+                  {LIKERT.map(({ n, label: fullLabel, short, emoji, color }) => {
                     const isSelected = val === n
                     return (
                       <label
@@ -1527,7 +1527,8 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
                             : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                           }`}
                       >
-                        <span className={`text-base font-bold leading-none transition-colors ${isSelected ? color.text : "text-slate-400"}`}>
+                        <span className="text-lg leading-none">{emoji}</span>
+                        <span className={`text-sm font-bold leading-none transition-colors ${isSelected ? color.text : "text-slate-400"}`}>
                           {n}
                         </span>
                         <span className={`text-[10px] leading-none font-medium hidden sm:block transition-colors ${isSelected ? color.text : "text-slate-300"}`}>
