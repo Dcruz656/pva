@@ -563,7 +563,7 @@ function VariableCard({ variable, idx, rating, onChange }) {
     { field: "claridad",    label: "Claridad",    hint: "¿Qué tan claro es el enunciado?" },
     { field: "relevancia",  label: "Relevancia",  hint: "¿Es relevante para el estudio?" },
     { field: "coherencia",  label: "Coherencia",  hint: "¿Es coherente con la dimensión?" },
-    { field: "pertinencia", label: "Pertinencia", hint: "¿Es pertinente para el objetivo?" },
+    { field: "pertinencia", label: "Pertinencia", hint: "¿Es pertinente para la dimensión?" },
   ]
 
   return (
