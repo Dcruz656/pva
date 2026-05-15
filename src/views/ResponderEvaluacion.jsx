@@ -515,8 +515,9 @@ function ScreenWelcome({ estudio, onStart }) {
                     para explicar la variable asociada — misma escala numérica del 1 al 5.
                   </p>
                   <div className="mt-3 flex flex-col gap-1">
-                    {LIKERT.map(({ n, label, color }) => (
+                    {LIKERT.map(({ n, label, emoji, color }) => (
                       <div key={n} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border ${color.border} ${color.bg}`}>
+                        <span className="text-base leading-none flex-shrink-0">{emoji}</span>
                         <span className={`text-sm font-bold w-5 text-center flex-shrink-0 ${color.text}`}>{n}</span>
                         <span className={`text-xs ${color.text}`}>{label}</span>
                       </div>
