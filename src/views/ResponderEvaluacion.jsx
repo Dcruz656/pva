@@ -637,7 +637,7 @@ function VariableCard({ variable, idx, rating, onChange }) {
                 <span className="text-xs text-slate-400 italic text-right hidden sm:block">{hint}</span>
               </div>
               <div className="grid grid-cols-5 gap-1.5">
-                {LIKERT.map(({ n, label: fullLabel, color }) => {
+                {LIKERT.map(({ n, label: fullLabel, short, color }) => {
                   const selected = val === n
                   return (
                     <label
@@ -653,7 +653,7 @@ function VariableCard({ variable, idx, rating, onChange }) {
                         {n}
                       </span>
                       <span className={`text-[10px] leading-none font-medium hidden sm:block transition-colors ${selected ? color.text : "text-slate-300"}`}>
-                        {n === 1 ? "Bajo" : n === 2 ? "Regular" : n === 3 ? "Medio" : n === 4 ? "Alto" : "Óptimo"}
+                        {short}
                       </span>
                       <input
                         type="radio"
@@ -1467,12 +1467,10 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Escala de valoración</p>
           <div className="flex gap-1.5">
-            {LIKERT.map(({ n, label, color }) => (
+            {LIKERT.map(({ n, short, color }) => (
               <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
                 <span className={`text-sm font-bold ${color.text}`}>{n}</span>
-                <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>
-                  {label.split(" ")[0]}
-                </span>
+                <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{short}</span>
               </div>
             ))}
           </div>
@@ -1517,7 +1515,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
               {/* Escala */}
               <div className="px-5 py-4">
                 <div className="grid grid-cols-5 gap-1.5">
-                  {LIKERT.map(({ n, label: fullLabel, color }) => {
+                  {LIKERT.map(({ n, label: fullLabel, short, color }) => {
                     const isSelected = val === n
                     return (
                       <label
@@ -1533,7 +1531,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
                           {n}
                         </span>
                         <span className={`text-[10px] leading-none font-medium hidden sm:block transition-colors ${isSelected ? color.text : "text-slate-300"}`}>
-                          {n === 1 ? "Bajo" : n === 2 ? "Regular" : n === 3 ? "Medio" : n === 4 ? "Alto" : "Óptimo"}
+                          {short}
                         </span>
                         <input
                           type="radio"
@@ -1751,10 +1749,10 @@ function ScreenTransition({ estudio, criterios, onContinue }) {
           <div className="px-5 pb-5">
             <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Escala de esta etapa</p>
             <div className="flex gap-1.5">
-              {LIKERT.map(({ n, label, color }) => (
+              {LIKERT.map(({ n, short, color }) => (
                 <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
                   <span className={`text-sm font-bold ${color.text}`}>{n}</span>
-                  <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{label.split(" ")[0]}</span>
+                  <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{short}</span>
                 </div>
               ))}
             </div>
