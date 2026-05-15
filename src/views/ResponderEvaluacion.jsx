@@ -46,7 +46,7 @@ function EvalLayout({ progress, title, children }) {
   return (
     <div className="min-h-screen bg-[#f0f4fa] flex flex-col">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center justify-between px-6 h-14 max-w-4xl mx-auto gap-4">
+        <div className="flex items-center justify-between px-6 h-14 max-w-6xl mx-auto gap-4">
           {/* Logo */}
           <div className="flex items-center gap-2.5 flex-shrink-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
@@ -80,7 +80,7 @@ function EvalLayout({ progress, title, children }) {
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-8 max-w-4xl mx-auto w-full">
+      <main className="flex-1 px-4 py-8 max-w-6xl mx-auto w-full">
         {children}
       </main>
 
@@ -710,7 +710,7 @@ function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
 
   return (
     <EvalLayout progress={Math.round((completedCount / variables.length) * 100)} title={estudio.titulo}>
-      <div className="max-w-2xl mx-auto space-y-5 pb-32">
+      <div className="max-w-3xl mx-auto space-y-5 pb-32">
         {/* Header */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="bg-primary px-6 py-4">
@@ -795,7 +795,7 @@ function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
 
       {/* Barra de acciones fija */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <button
             onClick={onBack}
             className="flex items-center gap-2 px-5 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors"
@@ -1176,7 +1176,7 @@ function ScreenForm({ estudio, sessionId, onDone }) {
 
       {/* Barra de acciones fija */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
-        <div className="max-w-4xl mx-auto px-4 py-3">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           {/* Mini progreso por dimensión */}
           <div className="flex gap-1 mb-3">
             {dimStats.map(({ name, done, total }) => (
@@ -1418,7 +1418,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto space-y-6 pb-32">
+      <div className="max-w-3xl mx-auto space-y-6 pb-32">
 
         {/* Banner de transición */}
         <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-4">
@@ -1554,7 +1554,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
 
       {/* Barra de acciones fija */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="text-sm hidden sm:block min-w-0">
             {lastSaved ? (
               <span className="text-slate-400 text-xs flex items-center gap-1">
@@ -1679,7 +1679,7 @@ function ScreenTransition({ estudio, criterios, onContinue }) {
 
   return (
     <EvalLayout progress={50} title={estudio.titulo}>
-      <div className="max-w-2xl mx-auto space-y-5 py-6">
+      <div className="max-w-3xl mx-auto space-y-5 py-6">
 
         {/* Etapa 1 completada */}
         <div className="flex items-center gap-4 bg-green-50 border border-green-200 rounded-2xl px-5 py-4">

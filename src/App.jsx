@@ -756,7 +756,7 @@ export default function App({ onLogout }) {
 
       {/* ── Main ── */}
       <main className="flex-1 mt-16 xl:ml-64 p-6 xl:p-10 pb-24 xl:pb-10 overflow-y-auto">
-        <div className="max-w-[1200px] mx-auto">
+        <div className="max-w-[1600px] mx-auto">
           {view === "dashboard" && <DashboardView onNavigate={navigate} />}
           {view === "historial" && <HistorialView />}
           {view === "evaluaciones" && (
