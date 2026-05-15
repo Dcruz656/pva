@@ -630,20 +630,19 @@ function VariableCard({ variable, idx, rating, onChange }) {
                   <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">{label}</span>
                   {selectedLK && (
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${selectedLK.color.border} ${selectedLK.color.bg} ${selectedLK.color.text}`}>
-                      {selectedLK.short}
+                      {selectedLK.label}
                     </span>
                   )}
                 </div>
                 <span className="text-xs text-slate-400 italic text-right hidden sm:block">{hint}</span>
               </div>
               <div className="grid grid-cols-5 gap-1.5">
-                {LIKERT.map(({ n, label: fullLabel, short, color }) => {
+                {LIKERT.map(({ n, label, color }) => {
                   const selected = val === n
                   return (
                     <label
                       key={n}
-                      title={fullLabel}
-                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 cursor-pointer transition-all select-none
+                      className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 cursor-pointer transition-all select-none
                         ${selected
                           ? `${color.border} ${color.bg}`
                           : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
@@ -652,8 +651,8 @@ function VariableCard({ variable, idx, rating, onChange }) {
                       <span className={`text-base font-bold leading-none transition-colors ${selected ? color.text : "text-slate-400"}`}>
                         {n}
                       </span>
-                      <span className={`text-[10px] leading-none font-medium hidden sm:block transition-colors ${selected ? color.text : "text-slate-300"}`}>
-                        {short}
+                      <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${selected ? color.text : "text-slate-300"}`}>
+                        {label}
                       </span>
                       <input
                         type="radio"
@@ -779,7 +778,7 @@ function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
                                   ? `${lk.color.border} ${lk.color.bg} ${lk.color.text}`
                                   : "border-slate-200 bg-slate-50 text-slate-400"
                               }`}>
-                                {label}: {val ? `${val} – ${lk?.short}` : "—"}
+                                {label}: {val ? `${val} – ${lk?.label}` : "—"}
                               </span>
                             )
                           })}
@@ -1466,11 +1465,11 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
         {/* Escala de referencia */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Escala de valoración</p>
-          <div className="flex gap-1.5">
-            {LIKERT.map(({ n, short, color }) => (
-              <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
-                <span className={`text-sm font-bold ${color.text}`}>{n}</span>
-                <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{short}</span>
+          <div className="flex flex-col gap-1">
+            {LIKERT.map(({ n, label, color }) => (
+              <div key={n} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border ${color.border} ${color.bg}`}>
+                <span className={`text-sm font-bold w-5 text-center flex-shrink-0 ${color.text}`}>{n}</span>
+                <span className={`text-xs ${color.text}`}>{label}</span>
               </div>
             ))}
           </div>
@@ -1507,7 +1506,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
                 {selectedLK && (
                   <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold ${selectedLK.color.border} ${selectedLK.color.bg} ${selectedLK.color.text}`}>
                     <span className="font-bold">{val}</span>
-                    {selectedLK.short}
+                    {selectedLK.label}
                   </div>
                 )}
               </div>
@@ -1515,13 +1514,12 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
               {/* Escala */}
               <div className="px-5 py-4">
                 <div className="grid grid-cols-5 gap-1.5">
-                  {LIKERT.map(({ n, label: fullLabel, short, emoji, color }) => {
+                  {LIKERT.map(({ n, label, emoji, color }) => {
                     const isSelected = val === n
                     return (
                       <label
                         key={n}
-                        title={fullLabel}
-                        className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 cursor-pointer transition-all select-none
+                        className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 cursor-pointer transition-all select-none
                           ${isSelected
                             ? `${color.border} ${color.bg}`
                             : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
@@ -1531,8 +1529,8 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
                         <span className={`text-sm font-bold leading-none transition-colors ${isSelected ? color.text : "text-slate-400"}`}>
                           {n}
                         </span>
-                        <span className={`text-[10px] leading-none font-medium hidden sm:block transition-colors ${isSelected ? color.text : "text-slate-300"}`}>
-                          {short}
+                        <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${isSelected ? color.text : "text-slate-300"}`}>
+                          {label}
                         </span>
                         <input
                           type="radio"
@@ -1749,11 +1747,11 @@ function ScreenTransition({ estudio, criterios, onContinue }) {
           {/* Escala de referencia */}
           <div className="px-5 pb-5">
             <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Escala de esta etapa</p>
-            <div className="flex gap-1.5">
-              {LIKERT.map(({ n, short, color }) => (
-                <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
-                  <span className={`text-sm font-bold ${color.text}`}>{n}</span>
-                  <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{short}</span>
+            <div className="flex flex-col gap-1">
+              {LIKERT.map(({ n, label, color }) => (
+                <div key={n} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border ${color.border} ${color.bg}`}>
+                  <span className={`text-sm font-bold w-5 text-center flex-shrink-0 ${color.text}`}>{n}</span>
+                  <span className={`text-xs ${color.text}`}>{label}</span>
                 </div>
               ))}
             </div>
