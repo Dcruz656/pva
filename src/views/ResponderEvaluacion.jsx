@@ -557,6 +557,7 @@ function ScreenWelcome({ estudio, onStart }) {
 function VariableCard({ variable, idx, rating, onChange }) {
   const isComplete = rating.claridad && rating.relevancia && rating.coherencia && rating.pertinencia
   const filledCount = [rating.claridad, rating.relevancia, rating.coherencia, rating.pertinencia].filter(Boolean).length
+  const { catVar } = resolveCatalogVar(variable)
 
   const CRITERIA = [
     { field: "claridad",    label: "Claridad",    hint: "¿Qué tan claro es el enunciado?" },
@@ -591,6 +592,9 @@ function VariableCard({ variable, idx, rating, onChange }) {
               <Icon name="category" className="text-xs" />
               {variable.dimension}
             </p>
+            {catVar?.descripcion && (
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">{catVar.descripcion}</p>
+            )}
           </div>
         </div>
         {/* Dots de progreso */}
