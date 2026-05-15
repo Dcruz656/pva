@@ -484,11 +484,11 @@ function ScreenWelcome({ estudio, onStart }) {
                   <strong className="text-slate-700">Pertinencia</strong>{" "}
                   — escala numérica del 1 al 5.
                 </p>
-                <div className="mt-3 flex gap-1.5">
-                  {LIKERT.map(({ n, short, color }) => (
-                    <div key={n} className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-lg border ${color.border} ${color.bg}`}>
-                      <span className={`text-sm font-bold leading-none ${color.text}`}>{n}</span>
-                      <span className={`text-[10px] leading-tight text-center ${color.text}`}>{short}</span>
+                <div className="mt-3 flex flex-col gap-1">
+                  {LIKERT.map(({ n, label, color }) => (
+                    <div key={n} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border ${color.border} ${color.bg}`}>
+                      <span className={`text-sm font-bold w-5 text-center flex-shrink-0 ${color.text}`}>{n}</span>
+                      <span className={`text-xs ${color.text}`}>{label}</span>
                     </div>
                   ))}
                 </div>
