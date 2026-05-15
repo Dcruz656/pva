@@ -512,7 +512,7 @@ function ScreenWelcome({ estudio, onStart }) {
                   <p className="font-bold text-slate-800 text-base mt-1">Evaluación de Criterios</p>
                   <p className="text-sm text-slate-500 mt-1 leading-relaxed">
                     Evalúe la <strong className="text-slate-700">pertinencia</strong> de cada criterio
-                    para explicar su variable asociada — misma escala numérica del 1 al 5.
+                    para explicar la variable asociada — misma escala numérica del 1 al 5.
                   </p>
                   <div className="mt-3 flex flex-col gap-1">
                     {LIKERT.map(({ n, label, color }) => (
