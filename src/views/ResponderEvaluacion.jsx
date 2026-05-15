@@ -294,6 +294,49 @@ function ScreenCode({ estudio, onVerify }) {
   )
 }
 
+// ── Datos de los índices IPL ───────────────────────────────────────────────
+
+const INDICES_IPL = [
+  {
+    id: 1,
+    subtitulo: "Index publicness for libraries as public space",
+    nombre: "La biblioteca como espacio público",
+    colorBg: "bg-blue-600", colorLight: "bg-blue-50", colorText: "text-blue-700", colorBorder: "border-blue-200",
+    descripcion: "Enfocado en los aspectos físicos del espacio, las condiciones de acceso, inclusión, interacción y uso colectivo del espacio bibliotecario. Considera cuatro subdimensiones que atraviesan tres dimensiones: diseño, gestión y uso, las cuales modifican el espacio público de forma consciente o inconsciente.",
+    subdimensiones: [
+      { nombre: "Acceso y accesibilidad", desc: "Aspectos que miden si la biblioteca brinda acceso universal y es accesible física, visual y virtualmente." },
+      { nombre: "Seguridad y confort",    desc: "Medidas visibles y operativas que protegen tanto a las personas como a lo material." },
+      { nombre: "Inclusión y neutralidad", desc: "Aspectos que miden si la biblioteca representa en su configuración instalaciones y servicios para todas las voces de la comunidad." },
+      { nombre: "Encuentro e interacción", desc: "Aspectos que facilitan o dificultan la interacción social, la construcción de comunidades y la formación de redes sociales." },
+    ],
+  },
+  {
+    id: 2,
+    subtitulo: "Index publicness for libraries as collective subject",
+    nombre: "La biblioteca como sujeto colectivo",
+    colorBg: "bg-purple-600", colorLight: "bg-purple-50", colorText: "text-purple-700", colorBorder: "border-purple-200",
+    descripcion: "Orientado a evaluar la capacidad de la biblioteca para actuar como agente social, a través de las formas en que se encarna como sujeto colectivo. Valora si la intervención del sujeto que representa a la biblioteca se acerca más a lo colectivo que a lo individual.",
+    subdimensiones: [
+      { nombre: "La comunidad como agente", desc: "Asume un rol regulador en la toma de decisiones de la biblioteca. Interesan las formas de intervención de la comunidad para lograr que la biblioteca opere atendiendo sus necesidades reales." },
+      { nombre: "Personal bibliotecario como agente", desc: "Es la encarnación directa de la biblioteca. Realiza acciones en nombre de «el público», actúa más allá del perfil de puesto para defender los intereses y derechos de la comunidad." },
+      { nombre: "Instituciones que legitiman y norman (ILN)", desc: "Ejercen una voz colectiva en favor de los derechos y necesidades de la triada comunidad, bibliotecas y personal bibliotecario, produciendo una imagen ideal del rol social y cultural de la biblioteca." },
+    ],
+  },
+  {
+    id: 3,
+    subtitulo: "Index publicness for libraries as object of debate and representation",
+    nombre: "La biblioteca como objeto de debate y representación",
+    colorBg: "bg-violet-700", colorLight: "bg-violet-50", colorText: "text-violet-700", colorBorder: "border-violet-200",
+    descripcion: "Centrado en las narrativas, percepciones, discursos y representaciones sociales que configuran el significado público simbólico de la biblioteca. La acción de debate o representación se acerca más a lo colectivo que a lo individual.",
+    subdimensiones: [
+      { nombre: "Debates y movimientos públicos", desc: "Se centran en cómo la sociedad civil, la academia y los grupos de presión influyen en la biblioteca." },
+      { nombre: "Alianzas estratégicas con otros entes", desc: "Tipos de alianzas y estrategias que se realizan y discuten para aumentar el alcance y la visibilidad de las bibliotecas." },
+      { nombre: "Representaciones artísticas", desc: "Construcción simbólica de las bibliotecas dentro de la imaginación colectiva. Tipos de acciones artísticas que promueven una imagen de la biblioteca." },
+      { nombre: "Representaciones públicas", desc: "Tipos de acciones públicas desarrolladas por entidades comerciales y medios de comunicación que difunden una imagen de la biblioteca." },
+    ],
+  },
+]
+
 // ── Pantalla de bienvenida ─────────────────────────────────────────────────
 
 function ScreenWelcome({ estudio, onStart }) {
@@ -302,25 +345,34 @@ function ScreenWelcome({ estudio, onStart }) {
   const dl = daysLeft(estudio.fecha_limite)
   const criterios = estudio.criterios_evaluacion || []
   const totalEtapas = criterios.length > 0 ? 2 : 1
+  const [expandedIdx, setExpandedIdx] = useState(null)
+
+  function toggleIdx(id) {
+    setExpandedIdx((prev) => (prev === id ? null : id))
+  }
 
   return (
     <EvalLayout progress={0} title={estudio.titulo}>
-      <div className="flex flex-col gap-5 py-4 max-w-2xl mx-auto">
+      <div className="flex flex-col gap-5 py-4 max-w-3xl mx-auto">
 
-        {/* Encabezado del estudio */}
+        {/* ── Encabezado institucional ── */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-primary px-8 py-6">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/60 mb-2">Evaluación académica</p>
+          <div className="bg-primary px-8 py-7">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/60 mb-3">Evaluación académica</p>
             <h1 className="font-bold text-2xl text-white leading-tight">{estudio.titulo}</h1>
-            {estudio.descripcion && (
-              <p className="text-sm text-white/70 mt-2 leading-relaxed">{estudio.descripcion}</p>
-            )}
+            <p className="text-sm text-white/70 mt-3 leading-relaxed max-w-2xl">
+              <em>PEML</em> es un modelo de evaluación orientado al análisis del carácter público de las bibliotecas
+              de acceso público (comunitarias, públicas, académicas, especializadas) desde una perspectiva
+              multidimensional a partir de tres figuras: como espacio público, como sujeto colectivo, y como
+              objeto de debate y representaciones{" "}
+              <span className="text-white/50">(Esquivel Carreón &amp; Marzal García-Quismondo, 2026).</span>
+            </p>
           </div>
           <div className="grid grid-cols-3 divide-x divide-slate-100">
             {[
-              { icon: "quiz",     value: variables.length,                           label: "variables"   },
-              { icon: "category", value: dims.length,                                label: "dimensiones" },
-              { icon: "route",    value: totalEtapas,                                label: "etapas"      },
+              { icon: "quiz",     value: variables.length, label: "variables"   },
+              { icon: "category", value: dims.length,      label: "dimensiones" },
+              { icon: "route",    value: totalEtapas,      label: "etapas"      },
             ].map(({ icon, value, label }) => (
               <div key={label} className="flex flex-col items-center py-4 gap-1">
                 <Icon name={icon} className="text-primary text-xl" />
@@ -331,7 +383,54 @@ function ScreenWelcome({ estudio, onStart }) {
           </div>
         </div>
 
-        {/* Fecha límite */}
+        {/* ── Índices IPL expandibles ── */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">Marco de evaluación</p>
+            <h3 className="font-bold text-slate-800 text-sm">Índices del IPL — haga clic para ampliar</h3>
+          </div>
+          {INDICES_IPL.map((idx, i) => {
+            const isOpen = expandedIdx === idx.id
+            return (
+              <div key={idx.id} className={i < 2 ? "border-b border-slate-100" : ""}>
+                <button
+                  onClick={() => toggleIdx(idx.id)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-xl ${idx.colorBg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                      <span className="text-white font-bold text-sm">{idx.id}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-800 text-sm leading-snug">{idx.nombre}</p>
+                      <p className="text-xs text-slate-400 italic">{idx.subtitulo}</p>
+                    </div>
+                  </div>
+                  <Icon name={isOpen ? "expand_less" : "expand_more"} className="text-slate-400 flex-shrink-0" />
+                </button>
+                {isOpen && (
+                  <div className={`px-5 pb-5 ${idx.colorLight} border-t ${idx.colorBorder}`}>
+                    <p className="text-sm text-slate-700 leading-relaxed mt-4 mb-4">{idx.descripcion}</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Subdimensiones</p>
+                    <div className="space-y-2">
+                      {idx.subdimensiones.map((sub) => (
+                        <div key={sub.nombre} className="flex items-start gap-3 bg-white rounded-xl border border-slate-200 px-4 py-3">
+                          <Icon name="arrow_right" className={`${idx.colorText} text-base flex-shrink-0 mt-0.5`} />
+                          <div>
+                            <p className={`font-semibold text-sm ${idx.colorText}`}>{sub.nombre}</p>
+                            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{sub.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* ── Fecha límite ── */}
         {dl !== null && (
           <div className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm border ${
             dl <= 0 ? "bg-red-50 text-red-700 border-red-200"
@@ -346,15 +445,13 @@ function ScreenWelcome({ estudio, onStart }) {
           </div>
         )}
 
-        {/* Instrucciones del investigador */}
+        {/* ── Instrucciones del investigador ── */}
         {estudio.instrucciones && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="font-semibold text-slate-700 text-sm mb-3 flex items-center gap-2">
               <Icon name="assignment" className="text-primary text-base" /> Instrucciones del investigador
             </h3>
-            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-              {estudio.instrucciones}
-            </p>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{estudio.instrucciones}</p>
           </div>
         )}
 
@@ -368,7 +465,7 @@ function ScreenWelcome({ estudio, onStart }) {
           </div>
 
           {/* Etapa 1 */}
-          <div className="p-5 border-b border-slate-100">
+          <div className={`p-5 ${totalEtapas > 1 ? "border-b border-slate-100" : ""}`}>
             <div className="flex items-start gap-4">
               <div className="flex flex-col items-center flex-shrink-0">
                 <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
@@ -377,75 +474,65 @@ function ScreenWelcome({ estudio, onStart }) {
                 {totalEtapas > 1 && <div className="w-0.5 h-8 bg-slate-200 mt-2" />}
               </div>
               <div className="flex-1 min-w-0 pt-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                    Etapa 1
-                  </span>
-                </div>
-                <p className="font-bold text-slate-800 text-base">Evaluación de Variables</p>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">Etapa 1</span>
+                <p className="font-bold text-slate-800 text-base mt-1">Evaluación de Variables</p>
                 <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                  Valore cada variable en cuatro criterios: <strong className="text-slate-700">Claridad</strong>, <strong className="text-slate-700">Relevancia</strong>, <strong className="text-slate-700">Coherencia</strong> y <strong className="text-slate-700">Pertinencia</strong>, usando la escala numérica del 1 al 5.
+                  Valore cada variable en cuatro atributos:{" "}
+                  <strong className="text-slate-700">Claridad</strong>,{" "}
+                  <strong className="text-slate-700">Relevancia</strong>,{" "}
+                  <strong className="text-slate-700">Coherencia</strong> y{" "}
+                  <strong className="text-slate-700">Pertinencia</strong>{" "}
+                  — escala numérica del 1 al 5.
                 </p>
-                {/* Escala numérica */}
                 <div className="mt-3 flex gap-1.5">
                   {LIKERT.map(({ n, label, color }) => (
                     <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
                       <span className={`text-sm font-bold ${color.text}`}>{n}</span>
-                      <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>
-                        {label.split(" ")[0]}
-                      </span>
+                      <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{label.split(" ")[0]}</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+                <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
                   <Icon name="quiz" className="text-sm text-primary" />
-                  <span>{variables.length} variable{variables.length !== 1 ? "s" : ""} · {dims.length} dimensión{dims.length !== 1 ? "es" : ""}</span>
-                </div>
+                  {variables.length} variable{variables.length !== 1 ? "s" : ""} · {dims.length} dimensión{dims.length !== 1 ? "es" : ""}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Etapa 2 — solo si hay criterios */}
+          {/* Etapa 2 */}
           {criterios.length > 0 && (
             <div className="p-5">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
-                    <span className="text-white font-bold text-sm">2</span>
-                  </div>
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm flex-shrink-0">
+                  <span className="text-white font-bold text-sm">2</span>
                 </div>
                 <div className="flex-1 min-w-0 pt-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-                      Etapa 2
-                    </span>
-                  </div>
-                  <p className="font-bold text-slate-800 text-base">Evaluación de Criterios</p>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Etapa 2</span>
+                  <p className="font-bold text-slate-800 text-base mt-1">Evaluación de Criterios</p>
                   <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                    Evalúe la <strong className="text-slate-700">pertinencia</strong> de cada criterio para explicar su variable asociada, usando la escala numérica del 1 al 5.
+                    Evalúe la <strong className="text-slate-700">pertinencia</strong> de cada criterio
+                    para explicar su variable asociada — misma escala numérica del 1 al 5.
                   </p>
-                  {/* Escala emoji */}
                   <div className="mt-3 flex gap-1.5">
-                    {LIKERT_FACES.map(({ n, emoji, label, border, bg, text }) => (
-                      <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${border} ${bg}`}>
-                        <span className="text-base leading-none">{emoji}</span>
-                        <span className={`text-[9px] leading-none text-center hidden sm:block ${text}`}>
-                          {label.split(" ")[0]}
-                        </span>
+                    {LIKERT.map(({ n, label, color }) => (
+                      <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
+                        <span className={`text-sm font-bold ${color.text}`}>{n}</span>
+                        <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{label.split(" ")[0]}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
                     <Icon name="checklist" className="text-sm text-indigo-500" />
-                    <span>{criterios.length} criterio{criterios.length !== 1 ? "s" : ""}</span>
-                  </div>
+                    {criterios.length} criterio{criterios.length !== 1 ? "s" : ""}
+                  </p>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Nota general */}
+        {/* Nota */}
         <div className="flex items-start gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 text-xs text-slate-500">
           <Icon name="info" className="text-slate-400 text-base flex-shrink-0 mt-0.5" />
           <span>Puede guardar su progreso y continuar después desde el mismo dispositivo. Una vez enviada cada etapa, no podrá modificarla.</span>
@@ -1166,15 +1253,84 @@ function ScreenForm({ estudio, sessionId, onDone }) {
   )
 }
 
+// ── Pantalla de borrador guardado ─────────────────────────────────────────
+
+function ScreenSavedDraft({ estudio }) {
+  return (
+    <EvalLayout progress={null} title={estudio.titulo}>
+      <div className="max-w-lg mx-auto flex flex-col items-center text-center gap-6 pt-16">
+        <div className="w-20 h-20 rounded-full bg-sky-100 flex items-center justify-center shadow-sm">
+          <Icon name="cloud_done" className="text-sky-500 text-4xl" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Progreso guardado</h2>
+          <p className="text-slate-500 leading-relaxed">
+            Sus respuestas de la Etapa 2 han sido guardadas como borrador.<br />
+            Puede cerrar esta página y continuar más tarde usando el mismo enlace.
+          </p>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 text-left w-full">
+          <p className="text-xs font-bold uppercase tracking-wider text-amber-600 mb-1">Recuerde</p>
+          <p className="text-sm text-amber-700">
+            La evaluación no estará completa hasta que envíe la Etapa 2. Al volver, su progreso se cargará automáticamente.
+          </p>
+        </div>
+        <a
+          href={window.location.href}
+          className="text-sm text-primary underline underline-offset-4"
+        >
+          Continuar ahora con la Etapa 2
+        </a>
+      </div>
+    </EvalLayout>
+  )
+}
+
 // ── Pantalla de evaluación de criterios ───────────────────────────────────
 
-function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
+function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
   const criterios = estudio.criterios_evaluacion || []
   const [ratings, setRatings] = useState(
     Object.fromEntries(criterios.map((c) => [c.id, null]))
   )
   const [submitting, setSubmitting] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  const [loaded, setLoaded] = useState(false)
   const [toast, setToast] = useState(null)
+  const autoSaveTimer = useRef(null)
+
+  // Load draft ratings on mount
+  useEffect(() => {
+    if (!criterios.length) { setLoaded(true); return }
+    const ids = criterios.map((c) => String(c.id))
+    supabase
+      .from("respuestas")
+      .select("variable_id, claridad")
+      .eq("estudio_id", estudio.id)
+      .eq("session_id", sessionId)
+      .in("variable_id", ids)
+      .then(({ data }) => {
+        if (data?.length) {
+          const restored = Object.fromEntries(criterios.map((c) => [c.id, null]))
+          data.forEach((r) => {
+            const cid = criterios.find((c) => String(c.id) === r.variable_id)?.id
+            if (cid !== undefined && r.claridad != null) restored[cid] = r.claridad
+          })
+          setRatings(restored)
+          setLastSaved(new Date())
+        }
+        setLoaded(true)
+      })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounced auto-save whenever ratings change (after initial load)
+  useEffect(() => {
+    if (!loaded) return
+    clearTimeout(autoSaveTimer.current)
+    autoSaveTimer.current = setTimeout(() => doSave("borrador", false), 3000)
+    return () => clearTimeout(autoSaveTimer.current)
+  }, [ratings, loaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const completedCount = Object.values(ratings).filter(Boolean).length
   const allComplete = completedCount === criterios.length && criterios.length > 0
@@ -1183,6 +1339,42 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
   function notify(type, msg) {
     setToast({ type, msg })
     setTimeout(() => setToast(null), 3500)
+  }
+
+  async function doSave(estado, showToast = true) {
+    const filledCriterios = criterios.filter((c) => ratings[c.id] != null)
+    if (!filledCriterios.length) return
+    if (showToast) setSaving(true)
+    try {
+      const rows = filledCriterios.map((c) => ({
+        estudio_id:    estudio.id,
+        session_id:    sessionId,
+        variable_id:   String(c.id),
+        variable:      c.nombre,
+        dimension:     c.variable_nombre || "Criterio de Evaluación",
+        claridad:      ratings[c.id],
+        relevancia:    null,
+        coherencia:    null,
+        observaciones: null,
+        estado,
+      }))
+      const { error } = await supabase
+        .from("respuestas")
+        .upsert(rows, { onConflict: "estudio_id,session_id,variable_id" })
+      if (error) throw error
+      setLastSaved(new Date())
+      if (showToast) notify("success", "Progreso guardado")
+    } catch (err) {
+      if (showToast) notify("error", "No se pudo guardar: " + err.message)
+    } finally {
+      if (showToast) setSaving(false)
+    }
+  }
+
+  async function handleSave() {
+    clearTimeout(autoSaveTimer.current)
+    await doSave("borrador", true)
+    onSaveAndExit?.()
   }
 
   async function handleSubmit() {
@@ -1363,8 +1555,13 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
       {/* Barra de acciones fija */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="text-sm hidden sm:block">
-            {allComplete ? (
+          <div className="text-sm hidden sm:block min-w-0">
+            {lastSaved ? (
+              <span className="text-slate-400 text-xs flex items-center gap-1">
+                <Icon name="cloud_done" className="text-sm text-slate-400" />
+                Guardado {lastSaved.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            ) : allComplete ? (
               <span className="text-green-600 font-semibold flex items-center gap-1.5">
                 <Icon name="check_circle" className="text-base" /> Todos los criterios evaluados
               </span>
@@ -1375,16 +1572,29 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone }) {
               </span>
             )}
           </div>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !allComplete}
-            className="flex-1 sm:flex-none px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm
-                       hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed
-                       flex items-center justify-center gap-2 transition-all shadow-md"
-          >
-            <Icon name="send" className="text-base" />
-            {submitting ? "Enviando…" : allComplete ? "Enviar Etapa 2 y finalizar" : `Faltan ${criterios.length - completedCount} criterios`}
-          </button>
+          <div className="flex items-center gap-2 flex-1 sm:flex-none justify-end">
+            <button
+              onClick={handleSave}
+              disabled={saving || submitting || completedCount === 0}
+              className="px-4 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm
+                         hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed
+                         flex items-center justify-center gap-1.5 transition-all"
+              title="Guardar progreso y continuar después"
+            >
+              <Icon name={saving ? "sync" : "save"} className={`text-base ${saving ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{saving ? "Guardando…" : "Guardar y salir"}</span>
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !allComplete}
+              className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm
+                         hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed
+                         flex items-center justify-center gap-2 transition-all shadow-md"
+            >
+              <Icon name="send" className="text-base" />
+              {submitting ? "Enviando…" : allComplete ? "Enviar y finalizar" : `Faltan ${criterios.length - completedCount}`}
+            </button>
+          </div>
         </div>
       </div>
     </EvalLayout>
@@ -1657,11 +1867,14 @@ export default function ResponderEvaluacion({ studyId }) {
     />
   )
 
+  if (phase === "saved_draft") return <ScreenSavedDraft estudio={estudio} />
+
   if (phase === "criterios_eval") return (
     <ScreenCriteriosEval
       estudio={estudio}
       sessionId={sessionId}
       onDone={() => setPhase("done")}
+      onSaveAndExit={() => setPhase("saved_draft")}
     />
   )
 
