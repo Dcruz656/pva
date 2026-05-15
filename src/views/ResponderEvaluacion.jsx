@@ -485,10 +485,10 @@ function ScreenWelcome({ estudio, onStart }) {
                   — escala numérica del 1 al 5.
                 </p>
                 <div className="mt-3 flex gap-1.5">
-                  {LIKERT.map(({ n, label, color }) => (
-                    <div key={n} className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border ${color.border} ${color.bg}`}>
-                      <span className={`text-sm font-bold ${color.text}`}>{n}</span>
-                      <span className={`text-[9px] leading-none text-center hidden sm:block ${color.text}`}>{label.split(" ")[0]}</span>
+                  {LIKERT.map(({ n, short, color }) => (
+                    <div key={n} className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-lg border ${color.border} ${color.bg}`}>
+                      <span className={`text-sm font-bold leading-none ${color.text}`}>{n}</span>
+                      <span className={`text-[10px] leading-tight text-center ${color.text}`}>{short}</span>
                     </div>
                   ))}
                 </div>
