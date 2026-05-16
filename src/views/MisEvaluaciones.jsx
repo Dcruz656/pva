@@ -1,6 +1,15 @@
 import { useState, useEffect, useMemo } from "react"
 import { supabase } from "../lib/supabase"
 import { exportarRespuestasExcel, exportarRespuestasPDF } from "../lib/exportar"
+import { INDICES, SUBDIMENSIONES, SUBDIMENSIONES_INDICE2, SUBDIMENSIONES_INDICE3 } from "../lib/variablesData"
+
+// Mapa: nombre de dimensión → número de índice
+const ALL_SUBDIMS = [
+  ...SUBDIMENSIONES.map((s) => ({ ...s, indice: 1 })),
+  ...SUBDIMENSIONES_INDICE2,
+  ...SUBDIMENSIONES_INDICE3,
+]
+const DIM_TO_INDICE = Object.fromEntries(ALL_SUBDIMS.map((s) => [s.nombre, s.indice]))
 
 function Icon({ name, className = "" }) {
   return <span className={`material-symbols-outlined leading-none select-none ${className}`}>{name}</span>
@@ -84,22 +93,64 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
   const [exportingId, setExportingId] = useState(null)
   const [search, setSearch] = useState("")
   const [sort, setSort] = useState("date_desc")
+  const [filterIndice, setFilterIndice]       = useState("")
+  const [filterDimension, setFilterDimension] = useState("")
+  const [filterVariable, setFilterVariable]   = useState("")
+  const [filterEvaluador, setFilterEvaluador] = useState("")
+  const [evaluadoresDB, setEvaluadoresDB]     = useState([]) // nombres únicos de evaluadores
 
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase
-      .from("estudios")
-      .select("*")
-      .order("created_at", { ascending: false })
-    setEstudios(data || [])
+    const [{ data: estudiosData }, { data: evalData }] = await Promise.all([
+      supabase.from("estudios").select("*").order("created_at", { ascending: false }),
+      supabase.from("respuestas").select("estudio_id, nombre_evaluador").eq("estado", "enviado").not("nombre_evaluador", "is", null),
+    ])
+    setEstudios(estudiosData || [])
+    // Construir mapa estudio_id → [nombres evaluadores]
+    const evMap = {}
+    for (const r of evalData || []) {
+      if (!evMap[r.estudio_id]) evMap[r.estudio_id] = new Set()
+      evMap[r.estudio_id].add(r.nombre_evaluador)
+    }
+    setEvaluadoresDB(evMap)
     setLoading(false)
   }
+
+  // Opciones de filtro derivadas de los estudios cargados
+  const filterOptions = useMemo(() => {
+    const indices     = new Set()
+    const dimensions  = new Set()
+    const variables   = new Set()
+    const evaluadores = new Set()
+
+    for (const e of estudios) {
+      for (const v of e.variables || []) {
+        if (v.dimension) {
+          dimensions.add(v.dimension)
+          const idx = DIM_TO_INDICE[v.dimension]
+          if (idx) indices.add(idx)
+        }
+        if (v.nombre) variables.add(v.nombre)
+      }
+      for (const nombre of evaluadoresDB[e.id] || []) {
+        evaluadores.add(nombre)
+      }
+    }
+
+    return {
+      indices:     [...indices].sort((a, b) => a - b),
+      dimensions:  [...dimensions].sort(),
+      variables:   [...variables].sort(),
+      evaluadores: [...evaluadores].sort(),
+    }
+  }, [estudios, evaluadoresDB])
 
   // Filtered + sorted
   const displayed = useMemo(() => {
     let list = estudios
+
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       list = list.filter((e) =>
@@ -107,6 +158,30 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
         e.descripcion?.toLowerCase().includes(q)
       )
     }
+
+    if (filterIndice) {
+      const idx = Number(filterIndice)
+      list = list.filter((e) =>
+        (e.variables || []).some((v) => DIM_TO_INDICE[v.dimension] === idx)
+      )
+    }
+
+    if (filterDimension) {
+      list = list.filter((e) =>
+        (e.variables || []).some((v) => v.dimension === filterDimension)
+      )
+    }
+
+    if (filterVariable) {
+      list = list.filter((e) =>
+        (e.variables || []).some((v) => v.nombre === filterVariable)
+      )
+    }
+
+    if (filterEvaluador) {
+      list = list.filter((e) => evaluadoresDB[e.id]?.has(filterEvaluador))
+    }
+
     list = [...list].sort((a, b) => {
       if (sort === "date_desc") return new Date(b.created_at) - new Date(a.created_at)
       if (sort === "date_asc")  return new Date(a.created_at) - new Date(b.created_at)
@@ -116,7 +191,7 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
       return 0
     })
     return list
-  }, [estudios, search, sort])
+  }, [estudios, evaluadoresDB, search, sort, filterIndice, filterDimension, filterVariable, filterEvaluador])
 
   async function toggleEstado(estudio) {
     const nuevoEstado = estudio.estado === "activo" ? "cerrado" : "activo"
@@ -198,33 +273,120 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
 
       {/* Búsqueda y orden */}
       {estudios.length > 0 && (
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex-1 min-w-[200px] flex items-center border border-outline-variant rounded-lg overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary bg-surface">
-            <span className="pl-3 text-on-surface-variant">
-              <Icon name="search" className="text-lg" />
-            </span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar evaluaciones…"
-              className="flex-1 px-3 py-2.5 text-sm bg-transparent outline-none text-on-surface placeholder:text-slate-400"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="pr-3 text-on-surface-variant hover:text-on-surface">
+        <div className="space-y-3">
+          {/* Fila 1: búsqueda + orden */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex-1 min-w-[200px] flex items-center border border-outline-variant rounded-lg overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary bg-surface">
+              <span className="pl-3 text-on-surface-variant">
+                <Icon name="search" className="text-lg" />
+              </span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar evaluaciones…"
+                className="flex-1 px-3 py-2.5 text-sm bg-transparent outline-none text-on-surface placeholder:text-slate-400"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="pr-3 text-on-surface-variant hover:text-on-surface">
+                  <Icon name="close" className="text-sm" />
+                </button>
+              )}
+            </div>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="px-3 py-2.5 border border-outline-variant rounded-lg text-sm bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Fila 2: filtros */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <Icon name="filter_list" className="text-on-surface-variant text-base flex-shrink-0" />
+
+            {/* Índice */}
+            <select
+              value={filterIndice}
+              onChange={(e) => { setFilterIndice(e.target.value); setFilterDimension(""); setFilterVariable("") }}
+              className={`px-3 py-1.5 border rounded-lg text-sm outline-none transition-colors
+                ${filterIndice ? "border-primary bg-primary/5 text-primary font-semibold" : "border-outline-variant bg-surface text-on-surface-variant"}`}
+            >
+              <option value="">Todos los índices</option>
+              {filterOptions.indices.map((i) => (
+                <option key={i} value={i}>{INDICES[i - 1]?.nombre ?? `Índice ${i}`}</option>
+              ))}
+            </select>
+
+            {/* Dimensión */}
+            <select
+              value={filterDimension}
+              onChange={(e) => { setFilterDimension(e.target.value); setFilterVariable("") }}
+              className={`px-3 py-1.5 border rounded-lg text-sm outline-none transition-colors
+                ${filterDimension ? "border-primary bg-primary/5 text-primary font-semibold" : "border-outline-variant bg-surface text-on-surface-variant"}`}
+            >
+              <option value="">Todas las dimensiones</option>
+              {filterOptions.dimensions
+                .filter((d) => !filterIndice || DIM_TO_INDICE[d] === Number(filterIndice))
+                .map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+            </select>
+
+            {/* Variable */}
+            <select
+              value={filterVariable}
+              onChange={(e) => setFilterVariable(e.target.value)}
+              className={`px-3 py-1.5 border rounded-lg text-sm outline-none transition-colors
+                ${filterVariable ? "border-primary bg-primary/5 text-primary font-semibold" : "border-outline-variant bg-surface text-on-surface-variant"}`}
+            >
+              <option value="">Todas las variables</option>
+              {filterOptions.variables
+                .filter((v) => {
+                  if (!filterDimension && !filterIndice) return true
+                  // Solo variables que pertenecen a estudios que pasan los filtros activos
+                  return estudios.some((e) =>
+                    (e.variables || []).some((ev) =>
+                      ev.nombre === v &&
+                      (!filterDimension || ev.dimension === filterDimension) &&
+                      (!filterIndice || DIM_TO_INDICE[ev.dimension] === Number(filterIndice))
+                    )
+                  )
+                })
+                .map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+            </select>
+
+            {/* Evaluador */}
+            {filterOptions.evaluadores.length > 0 && (
+              <select
+                value={filterEvaluador}
+                onChange={(e) => setFilterEvaluador(e.target.value)}
+                className={`px-3 py-1.5 border rounded-lg text-sm outline-none transition-colors
+                  ${filterEvaluador ? "border-primary bg-primary/5 text-primary font-semibold" : "border-outline-variant bg-surface text-on-surface-variant"}`}
+              >
+                <option value="">Todos los evaluadores</option>
+                {filterOptions.evaluadores.map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Limpiar filtros */}
+            {(filterIndice || filterDimension || filterVariable || filterEvaluador) && (
+              <button
+                onClick={() => { setFilterIndice(""); setFilterDimension(""); setFilterVariable(""); setFilterEvaluador("") }}
+                className="flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1.5"
+              >
                 <Icon name="close" className="text-sm" />
+                Limpiar filtros
               </button>
             )}
           </div>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="px-3 py-2.5 border border-outline-variant rounded-lg text-sm bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
         </div>
       )}
 
@@ -249,8 +411,13 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
       ) : displayed.length === 0 ? (
         <div className="text-center py-16 border border-outline-variant rounded-xl text-on-surface-variant">
           <Icon name="search_off" className="text-4xl block mb-2 mx-auto" />
-          <p className="text-sm">Sin resultados para "<strong>{search}</strong>"</p>
-          <button onClick={() => setSearch("")} className="mt-2 text-sm text-primary hover:underline">Limpiar búsqueda</button>
+          <p className="text-sm">Sin resultados para los filtros seleccionados</p>
+          <button
+            onClick={() => { setSearch(""); setFilterIndice(""); setFilterDimension(""); setFilterVariable(""); setFilterEvaluador("") }}
+            className="mt-2 text-sm text-primary hover:underline"
+          >
+            Limpiar búsqueda y filtros
+          </button>
         </div>
       ) : (
         <div className="grid gap-4">
