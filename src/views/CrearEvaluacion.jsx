@@ -1086,7 +1086,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
           <div key={label} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-1">
               <button
-                onClick={() => i < step && setStep(i)}
+                onClick={() => { if (i < step) setStep(i) }}
                 className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                   i < step  ? "bg-green-500 text-white cursor-pointer hover:opacity-80"
                   : i === step ? "bg-primary text-on-primary"
@@ -1128,7 +1128,7 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
       {/* Navigation */}
       <div className="flex justify-between">
         <button
-          onClick={() => step === 0 ? onBack() : setStep(step - 1)}
+          onClick={() => step === 0 ? onBack() : setStep((s) => s - 1)}
           className="px-6 py-3 border border-outline-variant text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container transition-all text-sm flex items-center gap-2"
         >
           <Icon name="arrow_back" className="text-base" />
@@ -1137,7 +1137,8 @@ export default function CrearEvaluacion({ onBack, onCreated, estudioToEdit }) {
 
         {step < STEP_LABELS.length - 1 ? (
           <button
-            onClick={() => setStep(step + 1)}
+            type="button"
+            onClick={() => { if (canAdvance()) setStep((s) => s + 1) }}
             disabled={!canAdvance()}
             className="px-6 py-3 bg-primary text-on-primary font-bold rounded-lg hover:opacity-90 disabled:opacity-40 transition-all text-sm flex items-center gap-2"
           >
