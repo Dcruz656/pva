@@ -495,9 +495,9 @@ function StepCriterios({ criterios, onChange }) {
           Escala de valoración aplicada
         </p>
         <div className="flex gap-2">
-          {LIKERT_FACES.map(({ n, emoji, label, color }) => (
+          {LIKERT_FACES.map(({ n, label, color }) => (
             <div key={n} className={`flex-1 flex flex-col items-center gap-1.5 border-2 rounded-xl py-3 px-1 ${color}`}>
-              <span className="text-2xl leading-none">{emoji}</span>
+              <span className="text-sm font-bold leading-none">{n}</span>
               <span className="text-[10px] font-medium text-center leading-tight whitespace-pre-line">{label}</span>
             </div>
           ))}
