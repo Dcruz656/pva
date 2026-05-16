@@ -841,8 +841,9 @@ function ConfiguracionView() {
         </h3>
         <div className="space-y-3 text-sm text-on-surface-variant">
           {[
-            { tabla: "estudios",   desc: "Evaluaciones creadas por el administrador" },
-            { tabla: "respuestas", desc: "Respuestas enviadas por los evaluadores" },
+            { tabla: "estudios",    desc: "Evaluaciones creadas por el administrador" },
+            { tabla: "respuestas",  desc: "Respuestas enviadas por los evaluadores" },
+            { tabla: "evaluadores", desc: "Registro de evaluadores que han participado" },
           ].map(({ tabla, desc }) => (
             <div key={tabla} className="flex items-center gap-3">
               <span className="font-mono text-xs bg-surface-container px-2 py-1 rounded text-primary">{tabla}</span>
@@ -850,6 +851,27 @@ function ConfiguracionView() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 space-y-3">
+        <h3 className="font-semibold text-amber-800 flex items-center gap-2">
+          <Icon name="gavel" className="text-amber-600" /> Aviso de Responsabilidad
+        </h3>
+        <p className="text-sm text-amber-900 leading-relaxed">
+          Esta plataforma es una herramienta de apoyo para procesos de validación académica. El uso de la plataforma,
+          la interpretación de los resultados obtenidos y las decisiones derivadas de los mismos son responsabilidad
+          exclusiva del usuario administrador y de las instituciones o personas que la utilicen.
+        </p>
+        <p className="text-sm text-amber-900 leading-relaxed">
+          Los resultados generados reflejan únicamente las valoraciones capturadas a través del instrumento configurado.
+          La plataforma no garantiza la validez, representatividad ni generalización de dichos resultados más allá del
+          contexto específico de cada evaluación.
+        </p>
+        <p className="text-sm text-amber-900 leading-relaxed">
+          El administrador es responsable de garantizar la confidencialidad de los datos de los evaluadores, el
+          resguardo de la información generada y el uso ético de los resultados conforme a las normativas y principios
+          de investigación aplicables.
+        </p>
       </div>
     </div>
   )
