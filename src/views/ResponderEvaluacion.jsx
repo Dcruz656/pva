@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react"
 import { supabase } from "../lib/supabase"
-import { findVarData, TODAS_SUBDIMENSIONES as SUBDIMENSIONES } from "../lib/variablesData"
+import { findVarData, TODAS_SUBDIMENSIONES as SUBDIMENSIONES, INDICES } from "../lib/variablesData"
 
 const LIKERT = [
   { n: 1, label: "Totalmente de acuerdo",     short: "T. acuerdo",   emoji: "😄", color: { border: "border-green-500",  bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500"  } },
@@ -1244,6 +1244,11 @@ function ScreenForm({ estudio, sessionId, evaluatorName, onSetName, onDone }) {
                     <Icon name={stat.done === stat.total ? "check" : "category"} className="text-white text-sm" />
                   </div>
                   <div>
+                    {DIM_INDICE[dim] && (
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-0.5">
+                        {INDICES[DIM_INDICE[dim] - 1]?.nombre ?? `Índice ${DIM_INDICE[dim]}`}
+                      </p>
+                    )}
                     <h3 className="font-bold text-slate-800 text-base">{dim}</h3>
                     {DIM_DESC[dim] && (
                       <p className="text-xs text-slate-400 mt-0.5 max-w-xl leading-relaxed">{DIM_DESC[dim]}</p>
@@ -1709,10 +1714,9 @@ const CATALOGO_VARS = SUBDIMENSIONES.flatMap((sub) =>
   sub.variables.map((v) => ({ ...v, __dimension_catalogo: sub.nombre }))
 )
 
-// Mapa: nombre de subdimensión → descripción
-const DIM_DESC = Object.fromEntries(
-  SUBDIMENSIONES.map((sub) => [sub.nombre, sub.descripcion])
-)
+// Mapa: nombre de subdimensión → descripción e índice
+const DIM_DESC   = Object.fromEntries(SUBDIMENSIONES.map((sub) => [sub.nombre, sub.descripcion]))
+const DIM_INDICE = Object.fromEntries(SUBDIMENSIONES.map((sub) => [sub.nombre, sub.indice ?? 1]))
 
 function normalizeText(value) {
   return String(value ?? "").trim().toLowerCase()
