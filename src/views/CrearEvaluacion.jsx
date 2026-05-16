@@ -485,7 +485,7 @@ function StepCriterios({ criterios, onChange }) {
       <div className="flex items-start gap-3 bg-secondary-container rounded-xl px-5 py-4">
         <Icon name="info" className="text-primary flex-shrink-0 mt-0.5" />
         <p className="text-sm font-medium text-on-secondary-container leading-relaxed">
-          Evalúe la pertinencia del criterio para explicar la variable.
+          Evalúe las variables que expliquen mejor al modelo.
         </p>
       </div>
 
