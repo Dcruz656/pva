@@ -553,38 +553,6 @@ function StepCriterios({ criterios, onChange }) {
         </div>
       )}
 
-      {/* Formulario agregar criterio */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-4">
-        <h4 className="text-sm font-semibold text-on-surface flex items-center gap-2">
-          <Icon name="add_circle" className="text-primary text-base" /> Agregar criterio
-        </h4>
-
-        {/* Nombre del criterio */}
-        <div>
-          <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide block mb-1.5">
-            Nombre del criterio
-          </label>
-          <input
-            value={newNombre}
-            onChange={(e) => setNewNombre(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addCriterio()}
-            placeholder="Ej: Claridad, Relevancia, Coherencia…"
-            className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-surface"
-          />
-        </div>
-
-        <button
-          onClick={addCriterio}
-          disabled={!newNombre.trim()}
-          className="w-full py-2.5 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2"
-        >
-          <Icon name="add" className="text-base" /> Agregar criterio
-        </button>
-      </div>
-
-      <p className="text-xs text-on-surface-variant">
-        {criterios.length} criterio{criterios.length !== 1 ? "s" : ""} definido{criterios.length !== 1 ? "s" : ""}. Mínimo 1 para continuar.
-      </p>
     </div>
   )
 }
