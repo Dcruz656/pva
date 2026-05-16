@@ -1730,6 +1730,25 @@ const CATALOGO_VARS = SUBDIMENSIONES.flatMap((sub) =>
 const DIM_DESC   = Object.fromEntries(SUBDIMENSIONES.map((sub) => [sub.nombre, sub.descripcion]))
 const DIM_INDICE = Object.fromEntries(SUBDIMENSIONES.map((sub) => [sub.nombre, sub.indice ?? 1]))
 
+// ── V2: mapas de contexto para selector navegable ─────────────────────────
+
+// SUBDIMENSIONES ya es TODAS_SUBDIMENSIONES (índices 1, 2 y 3)
+// Mapa: nombre de subdimensión → { sub, indice }
+const SUB_MAP = Object.fromEntries(
+  SUBDIMENSIONES.map((s) => [s.nombre, { sub: s, indice: s.indice ?? 1 }])
+)
+
+// Dado un variable de estudio.variables, devuelve su contexto completo
+function getVarContext(variable) {
+  const dimName = variable?.dimension || ""
+  const subEntry = SUB_MAP[dimName]
+  const subDim   = subEntry?.sub || null
+  const indiceNum  = subEntry?.indice ?? 1
+  const indiceData = INDICES_IPL.find((i) => i.id === indiceNum) || INDICES_IPL[0]
+  const { catVar } = resolveCatalogVar(variable)
+  return { subDim, indiceNum, indiceData, catVar }
+}
+
 function normalizeText(value) {
   return String(value ?? "").trim().toLowerCase()
 }
@@ -1903,11 +1922,510 @@ function ScreenTransition({ estudio, criterios, onContinue }) {
   )
 }
 
+// ── V2: Evaluación de una variable individual ─────────────────────────────
+
+function ScreenVariableEval({ estudio, sessionId, evaluatorName, varInfo, initialRating, criterios, onSaved, onBack, onGoToCriterios }) {
+  const { variable, subDim, indiceNum, indiceData, catVar } = varInfo
+  const hasIndice1Criterios = indiceNum === 1 && criterios.length > 0
+
+  const [rating, setRating] = useState(() => ({
+    claridad: null, relevancia: null, coherencia: null, pertinencia: null, observaciones: "",
+    ...(initialRating || {}),
+    observaciones: initialRating?.observaciones || "",
+  }))
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast]   = useState(null)
+  const autoTimer = useRef(null)
+
+  const filledCount = [rating.claridad, rating.relevancia, rating.coherencia, rating.pertinencia].filter(Boolean).length
+  const allFilled = filledCount === 4
+
+  // Auto-save borrador
+  useEffect(() => {
+    clearTimeout(autoTimer.current)
+    if (rating.claridad || rating.relevancia || rating.coherencia || rating.pertinencia) {
+      autoTimer.current = setTimeout(() => doSave("borrador", false), 3000)
+    }
+    return () => clearTimeout(autoTimer.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rating])
+
+  async function doSave(estado, showToast = true) {
+    if (showToast) setSaving(true)
+    const row = {
+      estudio_id:       estudio.id,
+      session_id:       sessionId,
+      variable_id:      variable.id,
+      variable:         variable.nombre,
+      dimension:        variable.dimension,
+      claridad:         rating.claridad,
+      relevancia:       rating.relevancia,
+      coherencia:       rating.coherencia,
+      pertinencia:      rating.pertinencia,
+      observaciones:    rating.observaciones || null,
+      nombre_evaluador: evaluatorName?.trim() || null,
+      estado,
+    }
+    const { error } = await supabase.from("respuestas")
+      .upsert([row], { onConflict: "estudio_id,session_id,variable_id" })
+    if (showToast) setSaving(false)
+    if (!error) {
+      if (showToast) { setToast({ type: "success", msg: "Guardado" }); setTimeout(() => setToast(null), 2000) }
+      return true
+    }
+    if (showToast) { setToast({ type: "error", msg: "Error al guardar" }); setTimeout(() => setToast(null), 3000) }
+    return false
+  }
+
+  async function handleSaveDraft() {
+    const ok = await doSave("borrador")
+    if (ok) onSaved(variable.id, { ...rating, estado: "borrador" })
+  }
+
+  async function handleConfirm(goToCriterios = false) {
+    const ok = await doSave("enviado")
+    if (ok) {
+      onSaved(variable.id, { ...rating, estado: "enviado" })
+      if (goToCriterios) onGoToCriterios()
+    }
+  }
+
+  const CRITERIA_FIELDS = [
+    { field: "claridad",    label: "Claridad",    hint: "¿Qué tan claro es el enunciado?" },
+    { field: "relevancia",  label: "Relevancia",  hint: "¿Es relevante para el estudio?" },
+    { field: "coherencia",  label: "Coherencia",  hint: "¿Es coherente con la dimensión?" },
+    { field: "pertinencia", label: "Pertinencia", hint: "¿Es pertinente para la dimensión?" },
+  ]
+
+  return (
+    <EvalLayout progress={null} title={estudio.titulo}>
+      {toast && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3
+                         rounded-2xl shadow-lg border text-sm font-medium whitespace-nowrap ${
+          toast.type === "success" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"
+        }`}>
+          <Icon name={toast.type === "success" ? "check_circle" : "error"} className="text-base" />
+          {toast.msg}
+        </div>
+      )}
+
+      <div className="max-w-3xl mx-auto space-y-5 pb-36 py-4">
+
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-xs flex-wrap">
+          <button onClick={onBack} className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1">
+            <Icon name="grid_view" className="text-sm" /> Índices
+          </button>
+          <Icon name="chevron_right" className="text-slate-300 text-base" />
+          <span className={`font-medium ${indiceData?.colorText || "text-primary"}`}>{indiceData?.nombre}</span>
+          <Icon name="chevron_right" className="text-slate-300 text-base" />
+          <span className="text-slate-500 font-medium">{subDim?.nombre || variable.dimension}</span>
+          <Icon name="chevron_right" className="text-slate-300 text-base" />
+          <span className="text-slate-700 font-semibold truncate max-w-[160px]">{variable.nombre}</span>
+        </nav>
+
+        {/* Tarjeta de contexto */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Franja del índice */}
+          <div className={`${indiceData?.colorBg || "bg-primary"} px-5 py-3 flex items-center gap-3`}>
+            <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-sm">{indiceNum}</span>
+            </div>
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Índice {indiceNum}</p>
+              <p className="font-bold text-white text-sm leading-tight">{indiceData?.nombre}</p>
+            </div>
+          </div>
+          {indiceData?.descripcion && (
+            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/60">
+              <p className="text-xs text-slate-500 leading-relaxed">{indiceData.descripcion}</p>
+            </div>
+          )}
+
+          {/* Subdimensión */}
+          {subDim && (
+            <div className="px-5 py-4 border-b border-slate-100">
+              <p className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${indiceData?.colorText || "text-primary"}`}>Subdimensión</p>
+              <p className="font-semibold text-slate-800 text-sm">{subDim.nombre}</p>
+              {subDim.descripcion && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{subDim.descripcion}</p>}
+            </div>
+          )}
+
+          {/* Variable */}
+          <div className="px-5 py-4">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Variable</p>
+            <p className="font-bold text-slate-800 text-base leading-snug">{variable.nombre}</p>
+            {catVar?.descripcion && (
+              <p className="text-sm text-slate-500 mt-2 leading-relaxed">{catVar.descripcion}</p>
+            )}
+            {catVar?.criterios?.length > 0 && (
+              <div className="mt-3">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">Criterios de referencia</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {catVar.criterios.map((c) => (
+                    <span key={c} className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Formulario de evaluación */}
+        <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 bg-primary/5">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-0.5">Evaluación — escala 1 a 5</p>
+            <p className="text-sm text-slate-500">
+              {filledCount}/4 atributos completados
+            </p>
+          </div>
+          <div className="px-5 py-4 space-y-5">
+            {CRITERIA_FIELDS.map(({ field, label, hint }) => {
+              const val = rating[field]
+              const selLK = val ? LIKERT[val - 1] : null
+              return (
+                <div key={field}>
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">{label}</span>
+                      {selLK && (
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${selLK.color.border} ${selLK.color.bg} ${selLK.color.text}`}>
+                          {selLK.label}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-400 italic hidden sm:block">{hint}</span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {LIKERT.map(({ n, label: lkLabel, color }) => {
+                      const sel = val === n
+                      return (
+                        <label key={n} className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 cursor-pointer transition-all select-none
+                          ${sel ? `${color.border} ${color.bg}` : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
+                          <span className={`text-base font-bold leading-none ${sel ? color.text : "text-slate-400"}`}>{n}</span>
+                          <span className={`text-[9px] leading-tight font-medium text-center ${sel ? color.text : "text-slate-300"}`}>{lkLabel}</span>
+                          <input type="radio" name={`${field}_${variable.id}`} value={n} checked={sel}
+                            onChange={() => setRating((prev) => ({ ...prev, [field]: n }))} className="sr-only" />
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+            <div>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide block mb-2">
+                Observaciones <span className="font-normal text-slate-400 normal-case tracking-normal">(opcional)</span>
+              </label>
+              <textarea
+                value={rating.observaciones}
+                onChange={(e) => setRating((prev) => ({ ...prev, observaciones: e.target.value }))}
+                placeholder="Sugerencias, aclaraciones o comentarios..."
+                rows={2}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700
+                           focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none
+                           bg-slate-50 placeholder:text-slate-400 outline-none"
+              />
+            </div>
+          </div>
+          <div className="h-1.5 bg-slate-100">
+            <div className={`h-1.5 transition-all duration-300 ${allFilled ? "bg-green-400" : "bg-primary/40"}`}
+              style={{ width: `${(filledCount / 4) * 100}%` }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Barra de acciones fija */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <button onClick={onBack}
+            className="flex items-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors">
+            <Icon name="arrow_back" className="text-base" /> Volver
+          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={handleSaveDraft} disabled={saving}
+              className="px-4 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1.5 transition-colors">
+              <Icon name={saving ? "sync" : "save"} className={`text-base ${saving ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Borrador</span>
+            </button>
+            {hasIndice1Criterios ? (
+              <>
+                <button onClick={() => handleConfirm(false)} disabled={saving || !allFilled}
+                  className="px-4 py-2.5 bg-green-500 text-white font-bold rounded-xl text-sm hover:bg-green-600 disabled:opacity-40 flex items-center gap-1.5 transition-all">
+                  <Icon name="check" className="text-base" />
+                  <span className="hidden sm:inline">Confirmar</span>
+                </button>
+                <button onClick={() => handleConfirm(true)} disabled={saving || !allFilled}
+                  className="px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-sm hover:bg-indigo-700 disabled:opacity-40 flex items-center gap-2 transition-all">
+                  <Icon name="arrow_forward" className="text-base" />
+                  <span className="hidden sm:inline">Confirmar y Etapa 2</span>
+                  <span className="sm:hidden">Etapa 2</span>
+                </button>
+              </>
+            ) : (
+              <button onClick={() => handleConfirm(false)} disabled={saving || !allFilled}
+                className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-sm hover:opacity-90 disabled:opacity-40 flex items-center gap-2 shadow-md transition-all">
+                <Icon name="check" className="text-base" /> Confirmar evaluación
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </EvalLayout>
+  )
+}
+
+// ── V2: Selector navegable de índices ─────────────────────────────────────
+
+function ScreenSelector({ estudio, sessionId, evaluatorName, ratings, setRatings, onCriteriosEval, onAllDone }) {
+  const variables = estudio.variables || []
+  const criterios = estudio.criterios_evaluacion || []
+
+  const [innerView, setInnerView]         = useState("index") // "index" | "variable"
+  const [selectedVarInfo, setSelVarInfo]  = useState(null)
+  const [expandedIndice, setExpandedIdx]  = useState(null)
+
+  // Agrupar variables por índice
+  const byIndice = useMemo(() => {
+    const g = { 1: [], 2: [], 3: [] }
+    for (const v of variables) {
+      const { indiceNum } = getVarContext(v)
+      g[indiceNum] = [...g[indiceNum], v]
+    }
+    return g
+  }, [variables])
+
+  function getVarStatus(v) {
+    const r = ratings[v.id]
+    if (!r) return "none"
+    if (r.estado === "enviado") return "done"
+    if (r.claridad || r.relevancia || r.coherencia || r.pertinencia) return "draft"
+    return "none"
+  }
+
+  function getIndiceProgress(n) {
+    const vars = byIndice[n] || []
+    const done = vars.filter((v) => getVarStatus(v) === "done").length
+    return { total: vars.length, done }
+  }
+
+  const totalDone      = variables.filter((v) => getVarStatus(v) === "done").length
+  const overallPct     = variables.length > 0 ? Math.round((totalDone / variables.length) * 100) : 0
+  const indice1Done    = (byIndice[1] || []).every((v) => getVarStatus(v) === "done")
+  const allVarsDone    = variables.length > 0 && variables.every((v) => getVarStatus(v) === "done")
+  const criteriosDone  = criterios.length === 0 || criterios.every((c) => ratings[String(c.id)]?.estado === "enviado")
+
+  function selectVariable(v) {
+    setSelVarInfo({ variable: v, ...getVarContext(v) })
+    setInnerView("variable")
+  }
+
+  function handleVarSaved(varId, updatedRating) {
+    setRatings((prev) => ({ ...prev, [varId]: updatedRating }))
+    setInnerView("index")
+    setSelVarInfo(null)
+  }
+
+  // — Vista de evaluación individual —
+  if (innerView === "variable" && selectedVarInfo) {
+    return (
+      <ScreenVariableEval
+        estudio={estudio}
+        sessionId={sessionId}
+        evaluatorName={evaluatorName}
+        varInfo={selectedVarInfo}
+        initialRating={ratings[selectedVarInfo.variable.id]}
+        criterios={criterios}
+        onSaved={handleVarSaved}
+        onBack={() => { setInnerView("index"); setSelVarInfo(null) }}
+        onGoToCriterios={onCriteriosEval}
+      />
+    )
+  }
+
+  // — Vista del selector de índices —
+  return (
+    <EvalLayout progress={overallPct} title={estudio.titulo}>
+      <div className="max-w-3xl mx-auto space-y-5 py-4">
+
+        {/* Header de progreso global */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-primary px-6 py-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/60 mb-1">Evaluación · Seleccione una variable</p>
+            <h2 className="font-bold text-xl text-white">{estudio.titulo}</h2>
+            <div className="flex items-center gap-3 mt-3">
+              <div className="flex-1 bg-white/20 rounded-full h-2 overflow-hidden">
+                <div className="h-2 bg-white rounded-full transition-all duration-700"
+                  style={{ width: `${overallPct}%` }} />
+              </div>
+              <span className="text-sm font-bold text-white whitespace-nowrap">{totalDone}/{variables.length} variables</span>
+            </div>
+          </div>
+          <div className="px-5 py-3 bg-slate-50 border-t border-slate-100">
+            <p className="text-xs text-slate-500">
+              Haga clic en un índice para expandirlo y seleccionar la variable que desea evaluar.
+            </p>
+          </div>
+        </div>
+
+        {/* Tarjetas de los 3 índices */}
+        {INDICES_IPL.map((idx) => {
+          const prog     = getIndiceProgress(idx.id)
+          const isOpen   = expandedIndice === idx.id
+          const allDone  = prog.total > 0 && prog.done === prog.total
+          const indVars  = byIndice[idx.id] || []
+
+          // Agrupar por subdimensión
+          const bySubDim = {}
+          for (const v of indVars) {
+            const dim = v.dimension || "General"
+            if (!bySubDim[dim]) bySubDim[dim] = []
+            bySubDim[dim].push(v)
+          }
+
+          return (
+            <div key={idx.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${
+              allDone ? "border-green-300" : "border-slate-200"
+            }`}>
+              {/* Cabecera del índice */}
+              <button
+                onClick={() => setExpandedIdx(isOpen ? null : idx.id)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl ${allDone ? "bg-green-500" : idx.colorBg} flex items-center justify-center flex-shrink-0 shadow-sm transition-colors`}>
+                    {allDone
+                      ? <Icon name="check" className="text-white text-xl" />
+                      : <span className="text-white font-bold text-lg">{idx.id}</span>
+                    }
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">{idx.subtitulo}</p>
+                    <p className="font-bold text-slate-800 text-sm leading-tight">{idx.nombre}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {prog.done}/{prog.total} variables
+                      {idx.id === 1 && criterios.length > 0 && " · con Etapa 2"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="text-right hidden sm:block">
+                    <div className="w-20 bg-slate-200 rounded-full h-1.5 mb-1">
+                      <div className={`h-1.5 rounded-full transition-all ${allDone ? "bg-green-400" : idx.colorBg}`}
+                        style={{ width: `${prog.total > 0 ? (prog.done / prog.total) * 100 : 0}%` }} />
+                    </div>
+                    <span className={`text-xs font-bold ${allDone ? "text-green-600" : "text-slate-400"}`}>
+                      {Math.round(prog.total > 0 ? (prog.done / prog.total) * 100 : 0)}%
+                    </span>
+                  </div>
+                  <Icon name={isOpen ? "expand_less" : "expand_more"} className="text-slate-400" />
+                </div>
+              </button>
+
+              {/* Contenido expandido */}
+              {isOpen && (
+                <div className={`border-t ${idx.colorBorder} ${idx.colorLight} p-4 space-y-3`}>
+                  {/* Descripción del índice */}
+                  <p className="text-xs text-slate-600 leading-relaxed italic px-1 mb-2">{idx.descripcion}</p>
+
+                  {/* Subdimensiones con sus variables */}
+                  {Object.entries(bySubDim).map(([subName, vars]) => {
+                    const subInfo = idx.subdimensiones.find((s) => s.nombre === subName)
+                    const subDone = vars.filter((v) => getVarStatus(v) === "done").length
+                    return (
+                      <div key={subName} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        {/* Cabecera de subdimensión */}
+                        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-2">
+                          <div>
+                            <p className={`font-semibold text-sm ${idx.colorText}`}>{subName}</p>
+                            {subInfo?.desc && <p className="text-xs text-slate-500 mt-0.5">{subInfo.desc}</p>}
+                          </div>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                            subDone === vars.length ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"
+                          }`}>{subDone}/{vars.length}</span>
+                        </div>
+                        {/* Lista de variables */}
+                        <div className="divide-y divide-slate-100">
+                          {vars.map((v) => {
+                            const status  = getVarStatus(v)
+                            const { catVar: cv } = getVarContext(v)
+                            return (
+                              <button key={v.id} onClick={() => selectVariable(v)}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors group">
+                                {/* Indicador de estado */}
+                                <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                                  status === "done"  ? "bg-green-500" :
+                                  status === "draft" ? "bg-amber-400" : "bg-slate-200"
+                                }`}>
+                                  {status === "done"
+                                    ? <Icon name="check" className="text-white text-xs" />
+                                    : status === "draft"
+                                    ? <Icon name="edit" className="text-white text-xs" />
+                                    : <Icon name="radio_button_unchecked" className="text-slate-400 text-sm" />
+                                  }
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-slate-800 leading-snug group-hover:text-primary transition-colors">{v.nombre}</p>
+                                  {cv?.descripcion && (
+                                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{cv.descripcion}</p>
+                                  )}
+                                </div>
+                                <Icon name="chevron_right" className="text-slate-300 group-hover:text-slate-400 flex-shrink-0 transition-colors" />
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {/* Prompt Etapa 2 para Índice 1 */}
+                  {idx.id === 1 && criterios.length > 0 && indice1Done && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-indigo-800 text-sm">Variables del Índice 1 completadas</p>
+                        <p className="text-xs text-indigo-600 mt-0.5">Continúe con la Etapa 2: Evaluación de Criterios</p>
+                      </div>
+                      <button onClick={onCriteriosEval}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl text-sm hover:bg-indigo-700 flex-shrink-0 shadow-sm transition-colors">
+                        <Icon name="arrow_forward" className="text-base" /> Etapa 2
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {/* Botón de finalizar cuando todo está completo */}
+        {allVarsDone && criteriosDone && (
+          <button onClick={onAllDone}
+            className="w-full py-4 bg-green-600 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 active:scale-[0.99] transition-all text-base flex items-center justify-center gap-3">
+            <Icon name="send" className="text-xl" /> Finalizar evaluación
+          </button>
+        )}
+
+        {/* Guía si no hay nada completado aún */}
+        {totalDone === 0 && (
+          <div className="flex items-start gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 text-xs text-slate-500">
+            <Icon name="lightbulb" className="text-amber-400 text-base flex-shrink-0 mt-0.5" />
+            <span>Expanda cualquier índice para ver sus variables. Las variables completadas aparecen con un círculo verde.</span>
+          </div>
+        )}
+      </div>
+    </EvalLayout>
+  )
+}
+
 export default function ResponderEvaluacion({ studyId }) {
-  const [phase, setPhase] = useState("loading")
-  const [estudio, setEstudio] = useState(null)
-  const estudioRef = useRef(null)
+  const [phase, setPhase]               = useState("loading")
+  const [estudio, setEstudio]           = useState(null)
+  const estudioRef                      = useRef(null)
   const [evaluatorName, setEvaluatorName] = useState("")
+  const [ratings, setRatings]           = useState({}) // { [varId]: { claridad, relevancia, coherencia, pertinencia, observaciones, estado } }
 
   const sessionId = useState(() => {
     const key = `pva_session_${studyId}`
@@ -1929,7 +2447,6 @@ export default function ResponderEvaluacion({ studyId }) {
 
       if (error || !study) { setPhase("error"); return }
 
-      // Always compute criterios — fills gaps when criterios_evaluacion was never saved to DB
       const computedCriterios = getCriteriosEval(study)
       const enriched = computedCriterios.length > 0 && !study.criterios_evaluacion?.length
         ? { ...study, criterios_evaluacion: computedCriterios }
@@ -1940,27 +2457,48 @@ export default function ResponderEvaluacion({ studyId }) {
 
       if (enriched.estado === "cerrado") { setPhase("closed"); return }
 
-      const { data: submitted } = await supabase
+      // Cargar TODAS las respuestas de esta sesión (V2: estado por variable)
+      const { data: allRows } = await supabase
         .from("respuestas")
-        .select("variable_id")
+        .select("*")
         .eq("estudio_id", studyId)
         .eq("session_id", sessionId)
-        .eq("estado", "enviado")
-      if (submitted?.length > 0) {
-        const criterios = enriched.criterios_evaluacion || []
-        if (criterios.length > 0) {
-          const submittedIds = new Set(submitted.map((r) => r.variable_id))
-          const allCriteriosDone = criterios.every((c) => submittedIds.has(String(c.id)))
-          if (!allCriteriosDone) { setPhase("criterios_eval"); return }
-        }
-        setPhase("done"); return
-      }
 
+      const ratingsMap = {}
+      for (const r of (allRows || [])) {
+        ratingsMap[r.variable_id] = {
+          claridad:      r.claridad,
+          relevancia:    r.relevancia,
+          coherencia:    r.coherencia,
+          pertinencia:   r.pertinencia,
+          observaciones: r.observaciones || "",
+          estado:        r.estado,
+        }
+      }
+      setRatings(ratingsMap)
+
+      // Recuperar nombre del evaluador si ya existe
+      const nombreGuardado = (allRows || []).find((r) => r.nombre_evaluador)?.nombre_evaluador
+      if (nombreGuardado) setEvaluatorName(nombreGuardado)
+
+      // ¿Todo completo?
+      const enrichedVars       = enriched.variables || []
+      const enrichedCriterios  = enriched.criterios_evaluacion || []
+      const submittedIds       = new Set((allRows || []).filter((r) => r.estado === "enviado").map((r) => r.variable_id))
+
+      const allVarsDone        = enrichedVars.length > 0 && enrichedVars.every((v) => submittedIds.has(v.id))
+      const allCriteriosDone   = enrichedCriterios.length === 0 || enrichedCriterios.every((c) => submittedIds.has(String(c.id)))
+
+      if (allVarsDone && allCriteriosDone) { setPhase("done"); return }
+
+      // Progreso parcial → ir al selector
+      if (Object.keys(ratingsMap).length > 0) { setPhase("selector"); return }
+
+      // Sin respuestas previas
       if (study.modo_acceso === "invitacion_codigo") {
         const ok = sessionStorage.getItem(`pva_code_${studyId}`)
         if (ok !== "ok") { setPhase("code"); return }
       }
-
       setPhase("welcome")
     }
     init()
@@ -1969,8 +2507,12 @@ export default function ResponderEvaluacion({ studyId }) {
   if (phase === "loading") return <ScreenLoading />
   if (phase === "error")   return <ScreenError />
   if (phase === "closed")  return <ScreenClosed estudio={estudio} />
-  if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} onEdit={() => setPhase("form")} />
-  if (phase === "name")    return (
+
+  if (phase === "done") return (
+    <ScreenDone estudio={estudio} sessionId={sessionId} onEdit={() => setPhase("selector")} />
+  )
+
+  if (phase === "name") return (
     <ScreenName
       estudio={estudio}
       sessionId={sessionId}
@@ -1979,25 +2521,19 @@ export default function ResponderEvaluacion({ studyId }) {
       onDone={() => setPhase("done")}
     />
   )
-  if (phase === "code") {
-    return (
-      <ScreenCode
-        estudio={estudio}
-        onVerify={() => {
-          sessionStorage.setItem(`pva_code_${studyId}`, "ok")
-          setPhase("welcome")
-        }}
-      />
-    )
-  }
-  if (phase === "welcome") return <ScreenWelcome estudio={estudio} onStart={() => setPhase("form")} />
 
-  if (phase === "transition") return (
-    <ScreenTransition
+  if (phase === "code") return (
+    <ScreenCode
       estudio={estudio}
-      criterios={estudio.criterios_evaluacion || []}
-      onContinue={() => setPhase("criterios_eval")}
+      onVerify={() => {
+        sessionStorage.setItem(`pva_code_${studyId}`, "ok")
+        setPhase("welcome")
+      }}
     />
+  )
+
+  if (phase === "welcome") return (
+    <ScreenWelcome estudio={estudio} onStart={() => setPhase("selector")} />
   )
 
   if (phase === "saved_draft") return <ScreenSavedDraft estudio={estudio} />
@@ -2013,21 +2549,16 @@ export default function ResponderEvaluacion({ studyId }) {
     />
   )
 
+  // phase === "selector" (V2 default)
   return (
-    <ScreenForm
+    <ScreenSelector
       estudio={estudio}
       sessionId={sessionId}
       evaluatorName={evaluatorName}
-      onSetName={setEvaluatorName}
-      onDone={() => {
-        const base = estudioRef.current ?? estudio
-        const criterios = getCriteriosEval(base)
-        if (criterios.length === 0) { setPhase("name"); return }
-        const nextEstudio = { ...base, criterios_evaluacion: criterios }
-        estudioRef.current = nextEstudio
-        setEstudio(nextEstudio)
-        setPhase("transition")
-      }}
+      ratings={ratings}
+      setRatings={setRatings}
+      onCriteriosEval={() => setPhase("criterios_eval")}
+      onAllDone={() => setPhase("name")}
     />
   )
 }
