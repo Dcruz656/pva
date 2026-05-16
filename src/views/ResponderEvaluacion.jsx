@@ -148,31 +148,87 @@ function ScreenClosed({ estudio }) {
   )
 }
 
-function ScreenDone({ estudio, sessionId, evaluatorName: initialName }) {
-  const variables = estudio.variables || []
-  const dims = [...new Set(variables.map((v) => v.dimension))]
+function ScreenName({ estudio, sessionId, evaluatorName, onSetName, onDone }) {
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState(false)
+  const trimmed = evaluatorName.trim()
 
-  const [editing, setEditing]   = useState(false)
-  const [nameVal, setNameVal]   = useState(initialName || "")
-  const [savedName, setSavedName] = useState(initialName || "")
-  const [saving, setSaving]     = useState(false)
-  const [saved, setSaved]       = useState(false)
-
-  async function handleSaveName() {
-    const trimmed = nameVal.trim()
+  async function handleConfirm() {
+    if (!trimmed) return
     setSaving(true)
-    const { error } = await supabase
+    setError(false)
+    const { error: err } = await supabase
       .from("respuestas")
-      .update({ nombre_evaluador: trimmed || null })
+      .update({ nombre_evaluador: trimmed })
       .eq("session_id", sessionId)
     setSaving(false)
-    if (!error) {
-      setSavedName(trimmed)
-      setEditing(false)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-    }
+    if (err) { setError(true); return }
+    onDone()
   }
+
+  return (
+    <EvalLayout progress={95} title={estudio.titulo}>
+      <div className="flex flex-col items-center gap-6 py-14 text-center max-w-md mx-auto">
+
+        {/* Icono */}
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+          <Icon name="badge" className="text-primary text-4xl" />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="font-bold text-2xl text-slate-800">Identificación del evaluador</h2>
+          <p className="text-slate-500 text-sm leading-relaxed">
+            Para registrar su participación, ingrese su nombre completo.<br />
+            Su nombre quedará asociado a todas sus respuestas.
+          </p>
+        </div>
+
+        {/* Input */}
+        <div className="w-full space-y-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block text-left">
+            Nombre completo
+          </label>
+          <input
+            type="text"
+            value={evaluatorName}
+            onChange={(e) => onSetName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
+            placeholder="Ej. María García López"
+            autoFocus
+            className={`w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all
+              ${trimmed ? "border-primary bg-primary/5" : "border-slate-200 bg-white"}`}
+          />
+          {error && (
+            <p className="text-xs text-red-500 flex items-center gap-1">
+              <Icon name="error" className="text-sm" />
+              Ocurrió un error al guardar. Intente de nuevo.
+            </p>
+          )}
+        </div>
+
+        {/* Botón */}
+        <button
+          onClick={handleConfirm}
+          disabled={!trimmed || saving}
+          className="w-full py-3.5 bg-primary text-white font-bold rounded-2xl shadow-md text-base
+                     hover:opacity-90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed
+                     transition-all flex items-center justify-center gap-2"
+        >
+          <Icon name={saving ? "sync" : "send"} className={`text-xl ${saving ? "animate-spin" : ""}`} />
+          {saving ? "Registrando…" : "Confirmar y finalizar"}
+        </button>
+
+        <p className="text-xs text-slate-400">
+          El botón se activa una vez que ingrese su nombre.
+        </p>
+      </div>
+    </EvalLayout>
+  )
+}
+
+function ScreenDone({ estudio, sessionId }) {
+  const variables = estudio.variables || []
+  const dims = [...new Set(variables.map((v) => v.dimension))]
 
   return (
     <EvalLayout progress={100} title={estudio.titulo}>
@@ -192,64 +248,6 @@ function ScreenDone({ estudio, sessionId, evaluatorName: initialName }) {
           <p className="text-slate-500 text-sm max-w-md">
             Su validación de <strong>"{estudio.titulo}"</strong> ha sido registrada exitosamente.
           </p>
-        </div>
-
-        {/* Nombre del evaluador */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-md text-left overflow-hidden">
-          <div className="bg-primary px-5 py-3 flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/70">Nombre del evaluador</p>
-            {!editing && (
-              <button
-                onClick={() => { setEditing(true); setSaved(false) }}
-                className="flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors"
-              >
-                <Icon name="edit" className="text-sm" />
-                Editar
-              </button>
-            )}
-          </div>
-          <div className="px-5 py-4">
-            {editing ? (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={nameVal}
-                  onChange={(e) => setNameVal(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-                  placeholder="Escriba su nombre completo"
-                  autoFocus
-                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-                <button
-                  onClick={handleSaveName}
-                  disabled={saving}
-                  className="px-4 py-2 bg-primary text-white font-semibold rounded-xl text-sm hover:opacity-90 disabled:opacity-50 transition-all"
-                >
-                  {saving ? "…" : "Guardar"}
-                </button>
-                <button
-                  onClick={() => { setEditing(false); setNameVal(savedName) }}
-                  className="px-3 py-2 border border-slate-200 text-slate-500 rounded-xl text-sm hover:bg-slate-50"
-                >
-                  <Icon name="close" className="text-base" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Icon name="person" className="text-primary text-base flex-shrink-0" />
-                {savedName ? (
-                  <span className="font-semibold text-slate-800 text-sm">{savedName}</span>
-                ) : (
-                  <span className="text-slate-400 text-sm italic">Sin nombre registrado — haga clic en Editar</span>
-                )}
-                {saved && (
-                  <span className="ml-auto text-xs text-green-600 flex items-center gap-1">
-                    <Icon name="check_circle" className="text-sm" /> Guardado
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Resumen */}
@@ -1187,20 +1185,6 @@ function ScreenForm({ estudio, sessionId, evaluatorName, onSetName, onDone }) {
             ))}
           </div>
 
-          {/* Campo nombre evaluador */}
-          <div className="border-t border-slate-100 pt-3 mb-3">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
-              Nombre del evaluador
-            </label>
-            <input
-              type="text"
-              value={evaluatorName}
-              onChange={(e) => onSetName(e.target.value)}
-              placeholder="Escriba su nombre completo"
-              className="w-full sm:max-w-sm border border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white"
-            />
-          </div>
-
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="text-sm hidden sm:flex items-center gap-3">
               {allComplete ? (
@@ -1558,21 +1542,7 @@ function ScreenCriteriosEval({ estudio, sessionId, evaluatorName, onSetName, onD
 
       {/* Barra de acciones fija */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
-        <div className="max-w-6xl mx-auto px-4 pt-3 pb-3 flex flex-col gap-2">
-          {/* Campo nombre evaluador */}
-          <div className="border-b border-slate-100 pb-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
-              Nombre del evaluador
-            </label>
-            <input
-              type="text"
-              value={evaluatorName}
-              onChange={(e) => onSetName(e.target.value)}
-              placeholder="Escriba su nombre completo"
-              className="w-full sm:max-w-sm border border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white"
-            />
-          </div>
-          <div className="flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="text-sm hidden sm:block min-w-0">
             {lastSaved ? (
               <span className="text-slate-400 text-xs flex items-center gap-1">
@@ -1612,7 +1582,6 @@ function ScreenCriteriosEval({ estudio, sessionId, evaluatorName, onSetName, onD
               <Icon name="send" className="text-base" />
               {submitting ? "Enviando…" : allComplete ? "Enviar y finalizar" : `Faltan ${criterios.length - completedCount}`}
             </button>
-          </div>
           </div>
         </div>
       </div>
@@ -1865,7 +1834,16 @@ export default function ResponderEvaluacion({ studyId }) {
   if (phase === "loading") return <ScreenLoading />
   if (phase === "error")   return <ScreenError />
   if (phase === "closed")  return <ScreenClosed estudio={estudio} />
-  if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} evaluatorName={evaluatorName} />
+  if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} />
+  if (phase === "name")    return (
+    <ScreenName
+      estudio={estudio}
+      sessionId={sessionId}
+      evaluatorName={evaluatorName}
+      onSetName={setEvaluatorName}
+      onDone={() => setPhase("done")}
+    />
+  )
   if (phase === "code") {
     return (
       <ScreenCode
@@ -1895,7 +1873,7 @@ export default function ResponderEvaluacion({ studyId }) {
       sessionId={sessionId}
       evaluatorName={evaluatorName}
       onSetName={setEvaluatorName}
-      onDone={() => setPhase("done")}
+      onDone={() => setPhase("name")}
       onSaveAndExit={() => setPhase("saved_draft")}
     />
   )
@@ -1909,7 +1887,7 @@ export default function ResponderEvaluacion({ studyId }) {
       onDone={() => {
         const base = estudioRef.current ?? estudio
         const criterios = getCriteriosEval(base)
-        if (criterios.length === 0) { setPhase("done"); return }
+        if (criterios.length === 0) { setPhase("name"); return }
         const nextEstudio = { ...base, criterios_evaluacion: criterios }
         estudioRef.current = nextEstudio
         setEstudio(nextEstudio)
