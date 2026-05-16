@@ -1036,7 +1036,7 @@ export default function App({ onLogout }) {
       <footer className="bg-surface-container-high border-t border-outline-variant xl:ml-64 hidden xl:block">
         <div className="flex justify-between items-center w-full px-10 py-3 max-w-[1440px] mx-auto">
           <span className="text-xs text-on-surface-variant">
-            © 2026 Sistema de Validación Académica — Comité de Ética e Investigación
+            © 2026 Sistema de Validación Académica
           </span>
           <span className="text-xs text-on-surface-variant">
             Diseño y desarrollo: <span className="font-semibold text-on-surface">Daniel Cruz Bautista</span>
