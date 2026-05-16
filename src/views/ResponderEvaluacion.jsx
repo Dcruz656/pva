@@ -621,21 +621,33 @@ function ScreenWelcome({ estudio, onStart }) {
           </div>
         )}
 
-        {/* ── Instrucciones del investigador ── */}
-        {estudio.instrucciones && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <h3 className="font-semibold text-slate-700 text-sm mb-3 flex items-center gap-2">
-              <Icon name="assignment" className="text-primary text-base" /> Instrucciones del investigador
-            </h3>
-            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{estudio.instrucciones}</p>
-          </div>
-        )}
-
         {/* Nota */}
         <div className="flex items-start gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 text-xs text-slate-500">
           <Icon name="info" className="text-slate-400 text-base flex-shrink-0 mt-0.5" />
           <span>Puede guardar su progreso y continuar después desde el mismo dispositivo. Una vez enviada cada etapa, no podrá modificarla.</span>
         </div>
+
+        {/* Descripción e instrucciones del estudio */}
+        {(estudio.descripcion || estudio.instrucciones) && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {estudio.descripcion && (
+              <div className="px-5 py-4 border-b border-slate-100">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
+                  <Icon name="description" className="text-sm" /> Descripción
+                </p>
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{estudio.descripcion}</p>
+              </div>
+            )}
+            {estudio.instrucciones && (
+              <div className="px-5 py-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
+                  <Icon name="assignment" className="text-sm" /> Instrucciones
+                </p>
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{estudio.instrucciones}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* CTA */}
         <button
