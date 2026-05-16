@@ -148,9 +148,31 @@ function ScreenClosed({ estudio }) {
   )
 }
 
-function ScreenDone({ estudio, sessionId }) {
+function ScreenDone({ estudio, sessionId, evaluatorName: initialName }) {
   const variables = estudio.variables || []
   const dims = [...new Set(variables.map((v) => v.dimension))]
+
+  const [editing, setEditing]   = useState(false)
+  const [nameVal, setNameVal]   = useState(initialName || "")
+  const [savedName, setSavedName] = useState(initialName || "")
+  const [saving, setSaving]     = useState(false)
+  const [saved, setSaved]       = useState(false)
+
+  async function handleSaveName() {
+    const trimmed = nameVal.trim()
+    setSaving(true)
+    const { error } = await supabase
+      .from("respuestas")
+      .update({ nombre_evaluador: trimmed || null })
+      .eq("session_id", sessionId)
+    setSaving(false)
+    if (!error) {
+      setSavedName(trimmed)
+      setEditing(false)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    }
+  }
 
   return (
     <EvalLayout progress={100} title={estudio.titulo}>
@@ -170,6 +192,64 @@ function ScreenDone({ estudio, sessionId }) {
           <p className="text-slate-500 text-sm max-w-md">
             Su validación de <strong>"{estudio.titulo}"</strong> ha sido registrada exitosamente.
           </p>
+        </div>
+
+        {/* Nombre del evaluador */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-md text-left overflow-hidden">
+          <div className="bg-primary px-5 py-3 flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/70">Nombre del evaluador</p>
+            {!editing && (
+              <button
+                onClick={() => { setEditing(true); setSaved(false) }}
+                className="flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors"
+              >
+                <Icon name="edit" className="text-sm" />
+                Editar
+              </button>
+            )}
+          </div>
+          <div className="px-5 py-4">
+            {editing ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={nameVal}
+                  onChange={(e) => setNameVal(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                  placeholder="Escriba su nombre completo"
+                  autoFocus
+                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  onClick={handleSaveName}
+                  disabled={saving}
+                  className="px-4 py-2 bg-primary text-white font-semibold rounded-xl text-sm hover:opacity-90 disabled:opacity-50 transition-all"
+                >
+                  {saving ? "…" : "Guardar"}
+                </button>
+                <button
+                  onClick={() => { setEditing(false); setNameVal(savedName) }}
+                  className="px-3 py-2 border border-slate-200 text-slate-500 rounded-xl text-sm hover:bg-slate-50"
+                >
+                  <Icon name="close" className="text-base" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Icon name="person" className="text-primary text-base flex-shrink-0" />
+                {savedName ? (
+                  <span className="font-semibold text-slate-800 text-sm">{savedName}</span>
+                ) : (
+                  <span className="text-slate-400 text-sm italic">Sin nombre registrado — haga clic en Editar</span>
+                )}
+                {saved && (
+                  <span className="ml-auto text-xs text-green-600 flex items-center gap-1">
+                    <Icon name="check_circle" className="text-sm" /> Guardado
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Resumen */}
@@ -1785,7 +1865,7 @@ export default function ResponderEvaluacion({ studyId }) {
   if (phase === "loading") return <ScreenLoading />
   if (phase === "error")   return <ScreenError />
   if (phase === "closed")  return <ScreenClosed estudio={estudio} />
-  if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} />
+  if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} evaluatorName={evaluatorName} />
   if (phase === "code") {
     return (
       <ScreenCode
