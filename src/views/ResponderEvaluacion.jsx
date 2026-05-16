@@ -374,7 +374,7 @@ function ScreenWelcome({ estudio, onStart }) {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">Marco de evaluación</p>
-            <h3 className="font-bold text-slate-800 text-sm">Índices del IPL — haga clic para ampliar</h3>
+            <h3 className="font-bold text-slate-800 text-sm">IPL — haga clic para ampliar</h3>
           </div>
           {INDICES_IPL.map((idx, i) => {
             const isOpen = expandedIdx === idx.id
