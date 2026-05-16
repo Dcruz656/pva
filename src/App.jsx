@@ -171,6 +171,10 @@ function HistorialView() {
   const [expandedEvals, setExpandedEvals] = useState({})
   const [deletingId, setDeletingId] = useState(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   // Carga inicial
   useEffect(() => {
@@ -282,6 +286,44 @@ function HistorialView() {
     setConfirmDeleteId(null)
   }
 
+  function toggleSelectId(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectSession(ids) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      const allSelected = ids.every((id) => next.has(id))
+      ids.forEach((id) => allSelected ? next.delete(id) : next.add(id))
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map((r) => r.id)))
+    }
+  }
+
+  async function handleBulkDelete() {
+    setBulkDeleting(true)
+    const ids = [...selectedIds]
+    const { error } = await supabase.from("respuestas").delete().in("id", ids)
+    if (!error) {
+      setRecords((prev) => prev.filter((r) => !selectedIds.has(r.id)))
+      setSelectedIds(new Set())
+      setSelectionMode(false)
+    }
+    setBulkDeleting(false)
+    setConfirmBulkDelete(false)
+  }
+
   // ── Clasificadores ────────────────────────────────────────────────────────
   function getEtapa(r) {
     return String(r.variable_id ?? "").includes("__") ? 2 : 1
@@ -328,6 +370,7 @@ function HistorialView() {
     return (
       <thead className="bg-surface-container-high border-b border-outline-variant">
         <tr>
+          {selectionMode && <th rowSpan={2} className="px-3 py-3 w-8" />}
           <th rowSpan={2} className={`${thBase} py-3`}>Evaluación</th>
           <th rowSpan={2} className={`${thBase} py-3`}>Variable</th>
           <th rowSpan={2} className={`${thBase} py-3`}>Subdimensión</th>
@@ -351,6 +394,7 @@ function HistorialView() {
     return (
       <thead className="bg-surface-container-high border-b border-outline-variant">
         <tr>
+          {selectionMode && <th className="px-3 py-3 w-8" />}
           <th className={`${thBase} py-3`}>Evaluación</th>
           <th className={`${thBase} py-3`}>Criterio</th>
           <th className={`${thBase} py-3 text-center`}>Pertinencia</th>
@@ -403,8 +447,15 @@ function HistorialView() {
   }
 
   function RowVars({ r }) {
+    const isSel = selectedIds.has(r.id)
     return (
-      <tr className="hover:bg-surface-container-low transition-colors">
+      <tr className={`hover:bg-surface-container-low transition-colors ${isSel ? "bg-primary/5" : ""}`}>
+        {selectionMode && (
+          <td className="px-3 py-3 w-8">
+            <input type="checkbox" checked={isSel} onChange={() => toggleSelectId(r.id)}
+              className="w-4 h-4 accent-primary cursor-pointer" />
+          </td>
+        )}
         <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[140px] truncate" title={estudioMap[r.estudio_id]}>
           {estudioMap[r.estudio_id] ?? r.estudio_id?.substring(0, 8) + "…"}
         </td>
@@ -422,8 +473,15 @@ function HistorialView() {
   }
 
   function RowCriterios({ r }) {
+    const isSel = selectedIds.has(r.id)
     return (
-      <tr className="hover:bg-indigo-50/30 transition-colors">
+      <tr className={`hover:bg-indigo-50/30 transition-colors ${isSel ? "bg-primary/5" : ""}`}>
+        {selectionMode && (
+          <td className="px-3 py-3 w-8">
+            <input type="checkbox" checked={isSel} onChange={() => toggleSelectId(r.id)}
+              className="w-4 h-4 accent-primary cursor-pointer" />
+          </td>
+        )}
         <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[140px] truncate" title={estudioMap[r.estudio_id]}>
           {estudioMap[r.estudio_id] ?? r.estudio_id?.substring(0, 8) + "…"}
         </td>
@@ -473,6 +531,18 @@ function HistorialView() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          {/* Modo selección */}
+          <button
+            onClick={() => { setSelectionMode((v) => !v); setSelectedIds(new Set()) }}
+            className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-semibold transition-all ${
+              selectionMode
+                ? "bg-red-50 text-red-600 border-red-200"
+                : "border-outline-variant text-on-surface-variant hover:bg-surface-container"
+            }`}
+          >
+            <Icon name={selectionMode ? "close" : "checklist"} className="text-base" />
+            {selectionMode ? "Cancelar selección" : "Seleccionar"}
+          </button>
           <button
             onClick={() => setGroupByEval((v) => !v)}
             className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-semibold transition-all ${
@@ -494,6 +564,67 @@ function HistorialView() {
           </button>
         </div>
       </div>
+
+      {/* Barra de selección */}
+      {selectionMode && (
+        <div className="flex items-center justify-between gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={filtered.length > 0 && selectedIds.size === filtered.length}
+              onChange={toggleSelectAll}
+              className="w-4 h-4 accent-red-500 cursor-pointer"
+            />
+            <span className="text-sm text-red-700 font-medium">
+              {selectedIds.size === 0
+                ? "Seleccione registros para eliminar"
+                : `${selectedIds.size} registro${selectedIds.size !== 1 ? "s" : ""} seleccionado${selectedIds.size !== 1 ? "s" : ""}`}
+            </span>
+            {filtered.length > 0 && (
+              <button onClick={toggleSelectAll} className="text-xs text-red-500 hover:underline">
+                {selectedIds.size === filtered.length ? "Deseleccionar todo" : "Seleccionar todo"}
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setConfirmBulkDelete(true)}
+            disabled={selectedIds.size === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white font-bold rounded-lg text-sm
+                       hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <Icon name="delete_sweep" className="text-base" />
+            Eliminar {selectedIds.size > 0 ? selectedIds.size : ""} seleccionados
+          </button>
+        </div>
+      )}
+
+      {/* Modal confirmación borrado grupal */}
+      {confirmBulkDelete && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-outline-variant p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Icon name="delete_sweep" className="text-red-500 text-xl" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800">¿Eliminar {selectedIds.size} registro{selectedIds.size !== 1 ? "s" : ""}?</h3>
+                <p className="text-sm text-slate-500 mt-1">Esta acción no se puede deshacer.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setConfirmBulkDelete(false)}
+                className="px-4 py-2 border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container">
+                Cancelar
+              </button>
+              <button onClick={handleBulkDelete} disabled={bulkDeleting}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 disabled:opacity-50 flex items-center gap-2">
+                <Icon name={bulkDeleting ? "sync" : "delete"} className={`text-base ${bulkDeleting ? "animate-spin" : ""}`} />
+                {bulkDeleting ? "Eliminando…" : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -562,43 +693,58 @@ function HistorialView() {
             const shortSid = sid.length > 12 ? sid.substring(0, 12) + "…" : sid
             const lastDate = rows.reduce((max, r) => (!max || r.updated_at > max ? r.updated_at : max), null)
             return (
-              <div key={sid} className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
-                <button
-                  onClick={() => toggleEval(sid)}
-                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-container-low transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
-                      <Icon name="person" className="text-base" />
-                    </div>
-                    <div>
-                      {nombre ? (
-                        <>
-                          <p className="font-semibold text-on-surface text-sm">{nombre}</p>
-                          <p className="text-[10px] text-on-surface-variant font-mono opacity-60">ID: {shortSid}</p>
-                        </>
-                      ) : (
-                        <p className="font-semibold text-on-surface text-sm font-mono">{shortSid}</p>
-                      )}
-                      <p className="text-xs text-on-surface-variant mt-0.5">
-                        {rows.length} variable{rows.length !== 1 ? "s" : ""} ·{" "}
-                        <span className={enviadas === rows.length ? "text-green-600 font-semibold" : "text-amber-600"}>
-                          {enviadas} enviada{enviadas !== 1 ? "s" : ""}
-                        </span>
-                        {lastDate && ` · ${formatDate(lastDate)}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-24 bg-slate-200 rounded-full h-1.5 hidden sm:block">
-                      <div
-                        className={`h-1.5 rounded-full ${enviadas === rows.length ? "bg-green-400" : "bg-primary"}`}
-                        style={{ width: `${(enviadas / rows.length) * 100}%` }}
+              <div key={sid} className={`bg-surface-container-lowest border rounded-xl overflow-hidden transition-colors ${
+                selectionMode && rows.every((r) => selectedIds.has(r.id)) ? "border-primary bg-primary/5" : "border-outline-variant"
+              }`}>
+                <div className="flex items-center">
+                  {selectionMode && (
+                    <div className="pl-4 pr-1 flex items-center self-stretch" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={rows.every((r) => selectedIds.has(r.id))}
+                        ref={(el) => { if (el) el.indeterminate = rows.some((r) => selectedIds.has(r.id)) && !rows.every((r) => selectedIds.has(r.id)) }}
+                        onChange={() => toggleSelectSession(rows.map((r) => r.id))}
+                        className="w-4 h-4 accent-primary cursor-pointer"
                       />
                     </div>
-                    <Icon name={isExpanded ? "expand_less" : "expand_more"} className="text-on-surface-variant" />
-                  </div>
-                </button>
+                  )}
+                  <button
+                    onClick={() => toggleEval(sid)}
+                    className="flex-1 flex items-center justify-between px-5 py-4 hover:bg-surface-container-low transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+                        <Icon name="person" className="text-base" />
+                      </div>
+                      <div>
+                        {nombre ? (
+                          <>
+                            <p className="font-semibold text-on-surface text-sm">{nombre}</p>
+                            <p className="text-[10px] text-on-surface-variant font-mono opacity-60">ID: {shortSid}</p>
+                          </>
+                        ) : (
+                          <p className="font-semibold text-on-surface text-sm font-mono">{shortSid}</p>
+                        )}
+                        <p className="text-xs text-on-surface-variant mt-0.5">
+                          {rows.length} variable{rows.length !== 1 ? "s" : ""} ·{" "}
+                          <span className={enviadas === rows.length ? "text-green-600 font-semibold" : "text-amber-600"}>
+                            {enviadas} enviada{enviadas !== 1 ? "s" : ""}
+                          </span>
+                          {lastDate && ` · ${formatDate(lastDate)}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 bg-slate-200 rounded-full h-1.5 hidden sm:block">
+                        <div
+                          className={`h-1.5 rounded-full ${enviadas === rows.length ? "bg-green-400" : "bg-primary"}`}
+                          style={{ width: `${(enviadas / rows.length) * 100}%` }}
+                        />
+                      </div>
+                      <Icon name={isExpanded ? "expand_less" : "expand_more"} className="text-on-surface-variant" />
+                    </div>
+                  </button>
+                </div>
                 {isExpanded && (
                   <div className="space-y-2 border-t border-outline-variant p-3">
                     <SectionTable
