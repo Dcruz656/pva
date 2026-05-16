@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react"
 import ReactDOM from "react-dom/client"
 import App from "./App.jsx"
-import ResponderEvaluacion from "./views/ResponderEvaluacion.jsx"
+import ResponderEvaluacion   from "./views/ResponderEvaluacion.jsx"
+import ResponderEvaluacionV2 from "./views/ResponderEvaluacionV2.jsx"
 import Login from "./views/Login.jsx"
 import "./App.css"
 
@@ -15,7 +16,11 @@ function Root() {
     return () => window.removeEventListener("hashchange", handler)
   }, [])
 
-  // Ruta pública del evaluador — no requiere login
+  // Ruta pública — versión alternativa (v2)
+  const matchV2 = hash.match(/^#\/evaluar-v2\/([0-9a-f-]{36})/i)
+  if (matchV2) return <ResponderEvaluacionV2 studyId={matchV2[1]} />
+
+  // Ruta pública del evaluador original
   const match = hash.match(/^#\/evaluar\/([0-9a-f-]{36})/i)
   if (match) return <ResponderEvaluacion studyId={match[1]} />
 

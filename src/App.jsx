@@ -824,31 +824,33 @@ function PreviewEvaluadorView() {
       .then(({ data }) => { setEstudios(data || []); setLoading(false) })
   }, [])
 
-  const baseUrl = window.location.href.split("#")[0]
-
-  const publicadas  = estudios.filter((e) => e.estado === "publicado")
-  const borrador    = estudios.filter((e) => e.estado !== "publicado")
+  const baseUrl    = window.location.href.split("#")[0]
+  const publicadas = estudios.filter((e) => e.estado === "publicado")
+  const borrador   = estudios.filter((e) => e.estado !== "publicado")
 
   function EvalCard({ e }) {
-    const url = `${baseUrl}#/evaluar/${e.id}`
+    const urlOriginal = `${baseUrl}#/evaluar/${e.id}`
+    const urlV2       = `${baseUrl}#/evaluar-v2/${e.id}`
     return (
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="font-semibold text-on-surface text-sm truncate">{e.titulo}</p>
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-3">
+        <div>
+          <p className="font-semibold text-on-surface text-sm">{e.titulo}</p>
           {e.codigo && (
             <p className="text-xs text-on-surface-variant mt-0.5 flex items-center gap-1">
               <Icon name="key" className="text-xs" /> Código: <span className="font-mono font-bold">{e.codigo}</span>
             </p>
           )}
         </div>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 flex-shrink-0 transition-opacity"
-        >
-          <Icon name="open_in_new" className="text-base" /> Abrir
-        </a>
+        <div className="flex gap-2 flex-wrap">
+          <a href={urlOriginal} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant text-on-surface-variant rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors">
+            <Icon name="open_in_new" className="text-sm" /> Versión original
+          </a>
+          <a href={urlV2} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-semibold hover:bg-violet-700 transition-colors">
+            <Icon name="open_in_new" className="text-sm" /> Versión alternativa (v2)
+          </a>
+        </div>
       </div>
     )
   }
@@ -856,24 +858,26 @@ function PreviewEvaluadorView() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-3 mb-1">
-          <h2 className="font-bold text-2xl text-primary">Vista del Evaluador</h2>
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
-            v2 · Versión alternativa
-          </span>
-        </div>
+        <h2 className="font-bold text-2xl text-primary mb-1">Vista del Evaluador</h2>
         <p className="text-sm text-on-surface-variant">
-          Abra cualquier evaluación en una pestaña nueva para ver la experiencia del evaluador con el nuevo diseño navegable.
+          Compare ambas versiones del flujo de evaluación abriendo cualquier evaluación en una pestaña nueva.
         </p>
       </div>
 
-      {/* Aviso */}
-      <div className="flex items-start gap-3 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 text-sm text-violet-800">
-        <Icon name="info" className="text-violet-500 flex-shrink-0 mt-0.5" />
-        <span>
-          Esta es la <strong>versión alternativa</strong> del flujo de evaluación. El evaluador navega por índice, subdimensión y variable,
-          con información contextual completa en cada paso.
-        </span>
+      {/* Comparativa */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Versión original</p>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Todas las variables en una sola pantalla, agrupadas por dimensión con navegación por scroll.
+          </p>
+        </div>
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-violet-600">Versión alternativa v2</p>
+          <p className="text-sm text-violet-800 leading-relaxed">
+            Navegación por índice → subdimensión → variable. Una variable a la vez con definiciones completas en cada nivel.
+          </p>
+        </div>
       </div>
 
       {loading ? (
