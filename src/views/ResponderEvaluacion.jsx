@@ -226,7 +226,7 @@ function ScreenName({ estudio, sessionId, evaluatorName, onSetName, onDone }) {
   )
 }
 
-function ScreenDone({ estudio, sessionId }) {
+function ScreenDone({ estudio, sessionId, onEdit }) {
   const variables = estudio.variables || []
   const dims = [...new Set(variables.map((v) => v.dimension))]
 
@@ -387,6 +387,15 @@ function ScreenDone({ estudio, sessionId }) {
             </div>
           ))}
         </div>
+
+        {/* Editar respuestas */}
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-primary transition-colors"
+        >
+          <Icon name="edit" className="text-base" />
+          Editar mis respuestas
+        </button>
 
         <p className="text-xs text-slate-400">Puede cerrar esta ventana con seguridad.</p>
       </div>
@@ -1936,7 +1945,7 @@ export default function ResponderEvaluacion({ studyId }) {
   if (phase === "loading") return <ScreenLoading />
   if (phase === "error")   return <ScreenError />
   if (phase === "closed")  return <ScreenClosed estudio={estudio} />
-  if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} />
+  if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} onEdit={() => setPhase("form")} />
   if (phase === "name")    return (
     <ScreenName
       estudio={estudio}
