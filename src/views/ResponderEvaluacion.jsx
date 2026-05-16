@@ -729,7 +729,7 @@ function ScreenReview({ estudio, ratings, onConfirm, onBack, submitting }) {
   )
 }
 
-function ScreenForm({ estudio, sessionId, onDone }) {
+function ScreenForm({ estudio, sessionId, evaluatorName, onSetName, onDone }) {
   const variables = estudio.variables || []
   const dims = [...new Set(variables.map((v) => v.dimension))]
 
@@ -846,16 +846,17 @@ function ScreenForm({ estudio, sessionId, onDone }) {
 
   function buildRows(estado) {
     return variables.map((v) => ({
-      estudio_id:    estudio.id,
-      session_id:    sessionId,
-      variable_id:   v.id,
-      variable:      v.nombre,
-      dimension:     v.dimension,
-      claridad:      ratings[v.id].claridad,
-      relevancia:    ratings[v.id].relevancia,
-      coherencia:    ratings[v.id].coherencia,
-      pertinencia:   ratings[v.id].pertinencia,
-      observaciones: ratings[v.id].observaciones || null,
+      estudio_id:         estudio.id,
+      session_id:         sessionId,
+      variable_id:        v.id,
+      variable:           v.nombre,
+      dimension:          v.dimension,
+      claridad:           ratings[v.id].claridad,
+      relevancia:         ratings[v.id].relevancia,
+      coherencia:         ratings[v.id].coherencia,
+      pertinencia:        ratings[v.id].pertinencia,
+      observaciones:      ratings[v.id].observaciones || null,
+      nombre_evaluador:   evaluatorName.trim() || null,
       estado,
     }))
   }
@@ -1106,6 +1107,20 @@ function ScreenForm({ estudio, sessionId, onDone }) {
             ))}
           </div>
 
+          {/* Campo nombre evaluador */}
+          <div className="border-t border-slate-100 pt-3 mb-3">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
+              Nombre del evaluador
+            </label>
+            <input
+              type="text"
+              value={evaluatorName}
+              onChange={(e) => onSetName(e.target.value)}
+              placeholder="Escriba su nombre completo"
+              className="w-full sm:max-w-sm border border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white"
+            />
+          </div>
+
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="text-sm hidden sm:flex items-center gap-3">
               {allComplete ? (
@@ -1201,7 +1216,7 @@ function ScreenSavedDraft({ estudio }) {
 
 // ── Pantalla de evaluación de criterios ───────────────────────────────────
 
-function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
+function ScreenCriteriosEval({ estudio, sessionId, evaluatorName, onSetName, onDone, onSaveAndExit }) {
   const criterios = estudio.criterios_evaluacion || []
   const [ratings, setRatings] = useState(
     Object.fromEntries(criterios.map((c) => [c.id, null]))
@@ -1260,15 +1275,16 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
     if (showToast) setSaving(true)
     try {
       const rows = filledCriterios.map((c) => ({
-        estudio_id:    estudio.id,
-        session_id:    sessionId,
-        variable_id:   String(c.id),
-        variable:      c.nombre,
-        dimension:     c.variable_nombre || "Criterio de Evaluación",
-        claridad:      ratings[c.id],
-        relevancia:    null,
-        coherencia:    null,
-        observaciones: null,
+        estudio_id:       estudio.id,
+        session_id:       sessionId,
+        variable_id:      String(c.id),
+        variable:         c.nombre,
+        dimension:        c.variable_nombre || "Criterio de Evaluación",
+        claridad:         ratings[c.id],
+        relevancia:       null,
+        coherencia:       null,
+        observaciones:    null,
+        nombre_evaluador: evaluatorName?.trim() || null,
         estado,
       }))
       const { error } = await supabase
@@ -1462,7 +1478,21 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
 
       {/* Barra de acciones fija */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-30">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 pt-3 pb-3 flex flex-col gap-2">
+          {/* Campo nombre evaluador */}
+          <div className="border-b border-slate-100 pb-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
+              Nombre del evaluador
+            </label>
+            <input
+              type="text"
+              value={evaluatorName}
+              onChange={(e) => onSetName(e.target.value)}
+              placeholder="Escriba su nombre completo"
+              className="w-full sm:max-w-sm border border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
           <div className="text-sm hidden sm:block min-w-0">
             {lastSaved ? (
               <span className="text-slate-400 text-xs flex items-center gap-1">
@@ -1502,6 +1532,7 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
               <Icon name="send" className="text-base" />
               {submitting ? "Enviando…" : allComplete ? "Enviar y finalizar" : `Faltan ${criterios.length - completedCount}`}
             </button>
+          </div>
           </div>
         </div>
       </div>
@@ -1692,6 +1723,7 @@ export default function ResponderEvaluacion({ studyId }) {
   const [phase, setPhase] = useState("loading")
   const [estudio, setEstudio] = useState(null)
   const estudioRef = useRef(null)
+  const [evaluatorName, setEvaluatorName] = useState("")
 
   const sessionId = useState(() => {
     const key = `pva_session_${studyId}`
@@ -1781,6 +1813,8 @@ export default function ResponderEvaluacion({ studyId }) {
     <ScreenCriteriosEval
       estudio={estudio}
       sessionId={sessionId}
+      evaluatorName={evaluatorName}
+      onSetName={setEvaluatorName}
       onDone={() => setPhase("done")}
       onSaveAndExit={() => setPhase("saved_draft")}
     />
@@ -1790,6 +1824,8 @@ export default function ResponderEvaluacion({ studyId }) {
     <ScreenForm
       estudio={estudio}
       sessionId={sessionId}
+      evaluatorName={evaluatorName}
+      onSetName={setEvaluatorName}
       onDone={() => {
         const base = estudioRef.current ?? estudio
         const criterios = getCriteriosEval(base)
