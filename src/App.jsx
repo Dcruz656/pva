@@ -810,6 +810,107 @@ function HistorialView() {
   )
 }
 
+// ── View: Preview Evaluador ───────────────────────────────────────────────
+
+function PreviewEvaluadorView() {
+  const [estudios, setEstudios] = useState([])
+  const [loading, setLoading]   = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from("estudios")
+      .select("id, titulo, estado, codigo")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { setEstudios(data || []); setLoading(false) })
+  }, [])
+
+  const baseUrl = window.location.href.split("#")[0]
+
+  const publicadas  = estudios.filter((e) => e.estado === "publicado")
+  const borrador    = estudios.filter((e) => e.estado !== "publicado")
+
+  function EvalCard({ e }) {
+    const url = `${baseUrl}#/evaluar/${e.id}`
+    return (
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="font-semibold text-on-surface text-sm truncate">{e.titulo}</p>
+          {e.codigo && (
+            <p className="text-xs text-on-surface-variant mt-0.5 flex items-center gap-1">
+              <Icon name="key" className="text-xs" /> Código: <span className="font-mono font-bold">{e.codigo}</span>
+            </p>
+          )}
+        </div>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:opacity-90 flex-shrink-0 transition-opacity"
+        >
+          <Icon name="open_in_new" className="text-base" /> Abrir
+        </a>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-center gap-3 mb-1">
+          <h2 className="font-bold text-2xl text-primary">Vista del Evaluador</h2>
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
+            v2 · Versión alternativa
+          </span>
+        </div>
+        <p className="text-sm text-on-surface-variant">
+          Abra cualquier evaluación en una pestaña nueva para ver la experiencia del evaluador con el nuevo diseño navegable.
+        </p>
+      </div>
+
+      {/* Aviso */}
+      <div className="flex items-start gap-3 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 text-sm text-violet-800">
+        <Icon name="info" className="text-violet-500 flex-shrink-0 mt-0.5" />
+        <span>
+          Esta es la <strong>versión alternativa</strong> del flujo de evaluación. El evaluador navega por índice, subdimensión y variable,
+          con información contextual completa en cada paso.
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-16 text-on-surface-variant">
+          <Icon name="hourglass_empty" className="text-4xl block mb-2 mx-auto" />
+          <p className="text-sm">Cargando evaluaciones…</p>
+        </div>
+      ) : (
+        <>
+          {publicadas.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+                <Icon name="public" className="text-base text-green-500" /> Publicadas
+              </h3>
+              {publicadas.map((e) => <EvalCard key={e.id} e={e} />)}
+            </div>
+          )}
+          {borrador.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+                <Icon name="draft" className="text-base text-amber-500" /> Borrador
+              </h3>
+              {borrador.map((e) => <EvalCard key={e.id} e={e} />)}
+            </div>
+          )}
+          {estudios.length === 0 && (
+            <div className="text-center py-16 text-on-surface-variant border border-outline-variant rounded-xl">
+              <Icon name="quiz" className="text-4xl block mb-2 mx-auto" />
+              <p className="text-sm">No hay evaluaciones creadas aún.</p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── View: Configuración ────────────────────────────────────────────────────
 
 function ConfiguracionView() {
@@ -889,6 +990,7 @@ export default function App({ onLogout }) {
     { icon: "dashboard",   label: "Panel de Control", viewKey: "dashboard" },
     { icon: "quiz",        label: "Mis Evaluaciones", viewKey: "evaluaciones" },
     { icon: "rate_review", label: "Respuestas",        viewKey: "historial" },
+    { icon: "preview",     label: "Vista Evaluador",   viewKey: "preview-evaluador" },
     { icon: "settings",    label: "Configuración",     viewKey: "configuracion" },
   ]
 
@@ -1000,6 +1102,7 @@ export default function App({ onLogout }) {
             />
           )}
           {view === "configuracion" && <ConfiguracionView />}
+          {view === "preview-evaluador" && <PreviewEvaluadorView />}
         </div>
       </main>
 
