@@ -847,7 +847,6 @@ function StepPublicar({ form }) {
               ? new Date(form.fecha_limite + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
               : "Sin fecha límite" },
           { label: "Variables",      value: `${form.variables.length} ítems en ${dims.length} dimensión${dims.length !== 1 ? "es" : ""}` },
-          { label: "Criterios",              value: form.criterios.map((c) => c.nombre).join(", ") },
           { label: "Tipo de acceso", value: form.modo_acceso === "liga_publica" ? "Acceso libre" : "Con código de acceso" },
           ...(form.modo_acceso === "invitacion_codigo"
             ? [{ label: "Código de acceso", value: form.codigo, mono: true }]
