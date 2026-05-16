@@ -1245,7 +1245,10 @@ function ScreenForm({ estudio, sessionId, evaluatorName, onSetName, onDone }) {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-800 text-base">{dim}</h3>
-                    <p className="text-xs text-slate-400">{stat.total} variable{stat.total !== 1 ? "s" : ""}</p>
+                    {DIM_DESC[dim] && (
+                      <p className="text-xs text-slate-400 mt-0.5 max-w-xl leading-relaxed">{DIM_DESC[dim]}</p>
+                    )}
+                    <p className="text-xs text-slate-400 mt-0.5">{stat.total} variable{stat.total !== 1 ? "s" : ""}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1704,6 +1707,11 @@ function ScreenCriteriosEval({ estudio, sessionId, evaluatorName, onSetName, onD
 
 const CATALOGO_VARS = SUBDIMENSIONES.flatMap((sub) =>
   sub.variables.map((v) => ({ ...v, __dimension_catalogo: sub.nombre }))
+)
+
+// Mapa: nombre de subdimensión → descripción
+const DIM_DESC = Object.fromEntries(
+  SUBDIMENSIONES.map((sub) => [sub.nombre, sub.descripcion])
 )
 
 function normalizeText(value) {
