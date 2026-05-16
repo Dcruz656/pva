@@ -1436,9 +1436,6 @@ function ScreenCriteriosEval({ estudio, sessionId, onDone, onSaveAndExit }) {
                           }`}
                       >
                         <span className="text-lg leading-none">{emoji}</span>
-                        <span className={`text-sm font-bold leading-none transition-colors ${isSelected ? color.text : "text-slate-400"}`}>
-                          {n}
-                        </span>
                         <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${isSelected ? color.text : "text-slate-300"}`}>
                           {label}
                         </span>
