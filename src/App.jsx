@@ -166,6 +166,7 @@ function HistorialView() {
   const [loading, setLoading] = useState(true)
   const [filterEstudio, setFilterEstudio] = useState("todos")
   const [filterEstado, setFilterEstado] = useState("todos")
+  const [filterEvaluador, setFilterEvaluador] = useState("todos")
   const [groupByEval, setGroupByEval] = useState(false)
   const [expandedEvals, setExpandedEvals] = useState({})
   const [deletingId, setDeletingId] = useState(null)
@@ -221,9 +222,34 @@ function HistorialView() {
     reloadAll()
   }, [filterEstudio])
 
-  const filtered = filterEstado === "todos"
-    ? records
-    : records.filter((r) => r.estado === filterEstado)
+  // Mapa session_id → nombre_evaluador (primer nombre encontrado por sesión)
+  const sessionNameMap = useMemo(() => {
+    const map = {}
+    for (const r of records) {
+      if (r.session_id && r.nombre_evaluador && !map[r.session_id]) {
+        map[r.session_id] = r.nombre_evaluador
+      }
+    }
+    return map
+  }, [records])
+
+  // Evaluadores únicos con nombre registrado
+  const evaluadoresConNombre = useMemo(() => {
+    const set = new Set()
+    for (const r of records) {
+      if (r.nombre_evaluador) set.add(r.nombre_evaluador)
+    }
+    return [...set].sort()
+  }, [records])
+
+  const filtered = useMemo(() => {
+    let list = records
+    if (filterEstado !== "todos") list = list.filter((r) => r.estado === filterEstado)
+    if (filterEvaluador !== "todos") {
+      list = list.filter((r) => r.nombre_evaluador === filterEvaluador)
+    }
+    return list
+  }, [records, filterEstado, filterEvaluador])
 
   const estudioMap = Object.fromEntries(estudiosEnRespuestas.map((e) => [e.id, e.titulo]))
   const filtroLabel = filterEstudio === "todos"
@@ -499,6 +525,21 @@ function HistorialView() {
             ))}
           </select>
         )}
+        {evaluadoresConNombre.length > 0 && (
+          <select
+            value={filterEvaluador}
+            onChange={(e) => setFilterEvaluador(e.target.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border focus:ring-1 focus:ring-primary outline-none transition-colors
+              ${filterEvaluador !== "todos"
+                ? "border-primary bg-primary/5 text-primary font-semibold"
+                : "border-outline-variant bg-surface text-on-surface"}`}
+          >
+            <option value="todos">Todos los evaluadores</option>
+            {evaluadoresConNombre.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {loading ? (
@@ -517,6 +558,7 @@ function HistorialView() {
           {groupedByEval.map(([sid, rows]) => {
             const enviadas = rows.filter((r) => r.estado === "enviado").length
             const isExpanded = expandedEvals[sid] ?? false
+            const nombre = sessionNameMap[sid] || null
             const shortSid = sid.length > 12 ? sid.substring(0, 12) + "…" : sid
             const lastDate = rows.reduce((max, r) => (!max || r.updated_at > max ? r.updated_at : max), null)
             return (
@@ -530,7 +572,14 @@ function HistorialView() {
                       <Icon name="person" className="text-base" />
                     </div>
                     <div>
-                      <p className="font-semibold text-on-surface text-sm font-mono">{shortSid}</p>
+                      {nombre ? (
+                        <>
+                          <p className="font-semibold text-on-surface text-sm">{nombre}</p>
+                          <p className="text-[10px] text-on-surface-variant font-mono opacity-60">ID: {shortSid}</p>
+                        </>
+                      ) : (
+                        <p className="font-semibold text-on-surface text-sm font-mono">{shortSid}</p>
+                      )}
                       <p className="text-xs text-on-surface-variant mt-0.5">
                         {rows.length} variable{rows.length !== 1 ? "s" : ""} ·{" "}
                         <span className={enviadas === rows.length ? "text-green-600 font-semibold" : "text-amber-600"}>
