@@ -368,19 +368,6 @@ function ScreenWelcome({ estudio, onStart }) {
               <span className="text-white/50">(Esquivel Carreón &amp; Marzal García-Quismondo, 2026).</span>
             </p>
           </div>
-          <div className="grid grid-cols-3 divide-x divide-slate-100">
-            {[
-              { icon: "quiz",     value: variables.length, label: "variables"   },
-              { icon: "category", value: dims.length,      label: "dimensiones" },
-              { icon: "route",    value: totalEtapas,      label: "etapas"      },
-            ].map(({ icon, value, label }) => (
-              <div key={label} className="flex flex-col items-center py-4 gap-1">
-                <Icon name={icon} className="text-primary text-xl" />
-                <span className="font-bold text-2xl text-slate-800">{value}</span>
-                <span className="text-xs text-slate-400">{label}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* ── Índices IPL expandibles ── */}
