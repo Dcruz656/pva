@@ -244,24 +244,34 @@ function TabDimension({ respuestas }) {
 
 function TabEvaluador({ respuestas, totalVariables }) {
   const evaluadores = useMemo(() => {
-    // Etapa 1 only
-    const etapa1 = respuestas.filter((r) => !String(r.variable_id ?? "").includes("__"))
+    // All rows (Etapa 1 + Etapa 2) to capture nombre_evaluador from either stage
     const map = new Map()
-    etapa1.forEach((r) => {
+    respuestas.forEach((r) => {
       if (!map.has(r.session_id)) {
-        map.set(r.session_id, { session_id: r.session_id, variables: new Set(), scores: [] })
+        map.set(r.session_id, {
+          session_id: r.session_id,
+          nombre_evaluador: null,
+          variables: new Set(),
+          scores: [],
+        })
       }
       const e = map.get(r.session_id)
-      e.variables.add(r.variable_id ?? r.variable)
-      if (r.claridad    != null) e.scores.push(r.claridad)
-      if (r.relevancia  != null) e.scores.push(r.relevancia)
-      if (r.coherencia  != null) e.scores.push(r.coherencia)
-      if (r.pertinencia != null) e.scores.push(r.pertinencia)
+      // Take name from any row that has it
+      if (r.nombre_evaluador && !e.nombre_evaluador) e.nombre_evaluador = r.nombre_evaluador
+      // Only aggregate scores from Etapa 1
+      if (!String(r.variable_id ?? "").includes("__")) {
+        e.variables.add(r.variable_id ?? r.variable)
+        if (r.claridad    != null) e.scores.push(r.claridad)
+        if (r.relevancia  != null) e.scores.push(r.relevancia)
+        if (r.coherencia  != null) e.scores.push(r.coherencia)
+        if (r.pertinencia != null) e.scores.push(r.pertinencia)
+      }
     })
     return Array.from(map.values()).map((e, i) => ({
       index: i + 1,
       session_id: e.session_id,
-      label: e.session_id ? e.session_id.substring(0, 8) + "…" : "—",
+      nombre: e.nombre_evaluador || null,
+      sessionLabel: e.session_id ? e.session_id.substring(0, 8) + "…" : "—",
       varCount: e.variables.size,
       completePct: totalVariables > 0 ? Math.round((e.variables.size / totalVariables) * 100) : 0,
       promedio: avg(e.scores),
@@ -296,7 +306,16 @@ function TabEvaluador({ respuestas, totalVariables }) {
                   <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold flex-shrink-0">
                     {e.index}
                   </div>
-                  <span className="font-mono text-xs text-on-surface-variant">{e.label}</span>
+                  <div className="min-w-0">
+                    {e.nombre ? (
+                      <span className="font-semibold text-on-surface">{e.nombre}</span>
+                    ) : (
+                      <span className="text-on-surface-variant italic text-xs">Sin nombre</span>
+                    )}
+                    <div className="text-[10px] text-on-surface-variant font-mono opacity-60 mt-0.5">
+                      ID: {e.sessionLabel}
+                    </div>
+                  </div>
                 </div>
               </td>
               <td className="py-3 px-4 text-center font-bold text-on-surface">
