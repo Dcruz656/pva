@@ -1066,6 +1066,15 @@ export default function App({ onLogout }) {
             className="w-full bg-primary text-on-primary py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-2">
             <Icon name="add" className="text-base" /> Nueva Evaluación
           </button>
+          <a
+            href={`${window.location.href.split("#")[0]}#/evaluar-v2`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-2 py-2 text-sm font-semibold text-violet-600 hover:text-violet-800 transition-colors"
+          >
+            <Icon name="open_in_new" className="text-base" />
+            Ver versión alternativa ↗
+          </a>
           <a href="mailto:dcruz@uacj.mx"
             className="flex items-center gap-3 text-on-surface-variant px-2 py-2 hover:text-primary text-sm transition-colors">
             <Icon name="contact_support" /> Soporte
