@@ -230,6 +230,46 @@ function ScreenDone({ estudio, sessionId }) {
   const variables = estudio.variables || []
   const dims = [...new Set(variables.map((v) => v.dimension))]
 
+  const [nombre, setNombre]     = useState("")
+  const [editing, setEditing]   = useState(false)
+  const [draft, setDraft]       = useState("")
+  const [saving, setSaving]     = useState(false)
+  const [savedOk, setSavedOk]   = useState(false)
+
+  // Cargar nombre existente al montar
+  useEffect(() => {
+    supabase
+      .from("respuestas")
+      .select("nombre_evaluador")
+      .eq("session_id", sessionId)
+      .not("nombre_evaluador", "is", null)
+      .limit(1)
+      .then(({ data }) => {
+        const found = data?.[0]?.nombre_evaluador || ""
+        setNombre(found)
+        setDraft(found)
+        if (!found) setEditing(true) // abrir automáticamente si no tiene nombre
+      })
+  }, [sessionId])
+
+  async function handleSave() {
+    const trimmed = draft.trim()
+    if (!trimmed) return
+    setSaving(true)
+    const { error } = await supabase
+      .from("respuestas")
+      .update({ nombre_evaluador: trimmed })
+      .eq("session_id", sessionId)
+    setSaving(false)
+    if (!error) {
+      setNombre(trimmed)
+      setDraft(trimmed)
+      setEditing(false)
+      setSavedOk(true)
+      setTimeout(() => setSavedOk(false), 3000)
+    }
+  }
+
   return (
     <EvalLayout progress={100} title={estudio.titulo}>
       <div className="flex flex-col items-center gap-6 py-12 text-center">
@@ -248,6 +288,68 @@ function ScreenDone({ estudio, sessionId }) {
           <p className="text-slate-500 text-sm max-w-md">
             Su validación de <strong>"{estudio.titulo}"</strong> ha sido registrada exitosamente.
           </p>
+        </div>
+
+        {/* Nombre del evaluador */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-md text-left overflow-hidden">
+          <div className="bg-primary px-5 py-3 flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/70">Nombre del evaluador</p>
+            {!editing && (
+              <button
+                onClick={() => { setDraft(nombre); setEditing(true) }}
+                className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white transition-colors"
+              >
+                <Icon name="edit" className="text-sm" />
+                Editar
+              </button>
+            )}
+          </div>
+          <div className="px-5 py-4">
+            {editing ? (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSave()}
+                  placeholder="Escriba su nombre completo"
+                  autoFocus
+                  className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all
+                    ${draft.trim() ? "border-primary bg-primary/5" : "border-slate-200"}`}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={!draft.trim() || saving}
+                    className="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm
+                               hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed
+                               flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Icon name={saving ? "sync" : "check"} className={`text-base ${saving ? "animate-spin" : ""}`} />
+                    {saving ? "Guardando…" : "Guardar nombre"}
+                  </button>
+                  {nombre && (
+                    <button
+                      onClick={() => { setDraft(nombre); setEditing(false) }}
+                      className="px-4 py-2.5 border border-slate-200 text-slate-500 rounded-xl text-sm hover:bg-slate-50"
+                    >
+                      <Icon name="close" className="text-base" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Icon name="person" className="text-primary text-base flex-shrink-0" />
+                <span className="font-semibold text-slate-800 text-sm">{nombre}</span>
+                {savedOk && (
+                  <span className="ml-auto text-xs text-green-600 flex items-center gap-1">
+                    <Icon name="check_circle" className="text-sm" /> Guardado
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Resumen */}
