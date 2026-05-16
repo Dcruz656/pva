@@ -2,7 +2,7 @@
  * ResponderEvaluacion — Interfaz exclusiva para evaluadores.
  * Completamente separada del panel de administración.
  */
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { supabase } from "../lib/supabase"
 import { findVarData, TODAS_SUBDIMENSIONES as SUBDIMENSIONES, INDICES } from "../lib/variablesData"
 
