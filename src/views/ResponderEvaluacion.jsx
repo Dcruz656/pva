@@ -644,7 +644,7 @@ function ScreenWelcome({ estudio, onStart }) {
                      hover:opacity-90 active:scale-[0.99] transition-all text-base flex items-center justify-center gap-3"
         >
           <Icon name="play_arrow" className="text-xl" />
-          Comenzar — Etapa 1
+          Comenzar
         </button>
       </div>
     </EvalLayout>
