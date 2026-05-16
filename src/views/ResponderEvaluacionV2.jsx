@@ -2420,15 +2420,55 @@ function ScreenSelector({ estudio, sessionId, evaluatorName, ratings, setRatings
   )
 }
 
-export default function ResponderEvaluacionV2({ studyId }) {
-  const [phase, setPhase]               = useState("loading")
-  const [estudio, setEstudio]           = useState(null)
-  const estudioRef                      = useRef(null)
-  const [evaluatorName, setEvaluatorName] = useState("")
-  const [ratings, setRatings]           = useState({}) // { [varId]: { claridad, relevancia, coherencia, pertinencia, observaciones, estado } }
+// ── Instrumento PEML completo (sin depender de una evaluación del admin) ────
+
+// Construye el objeto estudio directamente desde el catálogo de variablesData
+function buildInstrumentoPEML() {
+  // Variables de los 3 índices
+  const variables = SUBDIMENSIONES.flatMap((sub) =>
+    sub.variables.map((v) => ({
+      id:        v.clave,
+      nombre:    v.nombre,
+      dimension: sub.nombre,
+    }))
+  )
+
+  // Criterios de Etapa 2 (solo Índice 1)
+  const subs1    = SUBDIMENSIONES.filter((s) => (s.indice ?? 1) === 1)
+  const criterios = subs1.flatMap((sub) =>
+    sub.variables.flatMap((v) =>
+      (v.criterios || []).map((c) => ({
+        id:             `${v.clave}__${c}`,
+        nombre:         c,
+        variable_nombre: v.nombre,
+        dimension:      sub.nombre,
+      }))
+    )
+  )
+
+  return {
+    id:                  "peml-v2",
+    titulo:              "Instrumento PEML — Evaluación Completa",
+    descripcion:         "Modelo de evaluación del carácter público de las bibliotecas (PEML). Evalúe cada variable usando los cuatro atributos de valoración.",
+    instrucciones:       "Seleccione un índice, elija una variable y asigne un valor del 1 al 5 a cada atributo. Al terminar el Índice 1 podrá continuar con la evaluación de criterios.",
+    fecha_limite:        null,
+    modo_acceso:         "publico",
+    estado:              "publicado",
+    variables,
+    criterios_evaluacion: criterios,
+  }
+}
+
+const ESTUDIO_PEML = buildInstrumentoPEML()
+
+export default function ResponderEvaluacionV2() {
+  const estudio = ESTUDIO_PEML
+  const [phase, setPhase]                   = useState("loading")
+  const [evaluatorName, setEvaluatorName]   = useState("")
+  const [ratings, setRatings]               = useState({})
 
   const sessionId = useState(() => {
-    const key = `pva_session_${studyId}`
+    const key = "pva_session_v2_peml"
     let id = localStorage.getItem(key)
     if (!id) {
       id = Date.now().toString(36) + Math.random().toString(36).substring(2)
@@ -2439,29 +2479,10 @@ export default function ResponderEvaluacionV2({ studyId }) {
 
   useEffect(() => {
     async function init() {
-      const { data: study, error } = await supabase
-        .from("estudios")
-        .select("*")
-        .eq("id", studyId)
-        .single()
-
-      if (error || !study) { setPhase("error"); return }
-
-      const computedCriterios = getCriteriosEval(study)
-      const enriched = computedCriterios.length > 0 && !study.criterios_evaluacion?.length
-        ? { ...study, criterios_evaluacion: computedCriterios }
-        : study
-
-      estudioRef.current = enriched
-      setEstudio(enriched)
-
-      if (enriched.estado === "cerrado") { setPhase("closed"); return }
-
-      // Cargar TODAS las respuestas de esta sesión (V2: estado por variable)
+      // Cargar respuestas previas de esta sesión
       const { data: allRows } = await supabase
         .from("respuestas")
         .select("*")
-        .eq("estudio_id", studyId)
         .eq("session_id", sessionId)
 
       const ratingsMap = {}
@@ -2477,36 +2498,23 @@ export default function ResponderEvaluacionV2({ studyId }) {
       }
       setRatings(ratingsMap)
 
-      // Recuperar nombre del evaluador si ya existe
       const nombreGuardado = (allRows || []).find((r) => r.nombre_evaluador)?.nombre_evaluador
       if (nombreGuardado) setEvaluatorName(nombreGuardado)
 
-      // ¿Todo completo?
-      const enrichedVars       = enriched.variables || []
-      const enrichedCriterios  = enriched.criterios_evaluacion || []
-      const submittedIds       = new Set((allRows || []).filter((r) => r.estado === "enviado").map((r) => r.variable_id))
-
-      const allVarsDone        = enrichedVars.length > 0 && enrichedVars.every((v) => submittedIds.has(v.id))
-      const allCriteriosDone   = enrichedCriterios.length === 0 || enrichedCriterios.every((c) => submittedIds.has(String(c.id)))
+      const submittedIds     = new Set((allRows || []).filter((r) => r.estado === "enviado").map((r) => r.variable_id))
+      const allVarsDone      = estudio.variables.length > 0 && estudio.variables.every((v) => submittedIds.has(v.id))
+      const allCriteriosDone = estudio.criterios_evaluacion.length === 0 ||
+        estudio.criterios_evaluacion.every((c) => submittedIds.has(String(c.id)))
 
       if (allVarsDone && allCriteriosDone) { setPhase("done"); return }
-
-      // Progreso parcial → ir al selector
       if (Object.keys(ratingsMap).length > 0) { setPhase("selector"); return }
 
-      // Sin respuestas previas
-      if (study.modo_acceso === "invitacion_codigo") {
-        const ok = sessionStorage.getItem(`pva_code_${studyId}`)
-        if (ok !== "ok") { setPhase("code"); return }
-      }
       setPhase("welcome")
     }
     init()
-  }, [studyId, sessionId])
+  }, [sessionId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (phase === "loading") return <ScreenLoading />
-  if (phase === "error")   return <ScreenError />
-  if (phase === "closed")  return <ScreenClosed estudio={estudio} />
 
   if (phase === "done") return (
     <ScreenDone estudio={estudio} sessionId={sessionId} onEdit={() => setPhase("selector")} />
@@ -2519,16 +2527,6 @@ export default function ResponderEvaluacionV2({ studyId }) {
       evaluatorName={evaluatorName}
       onSetName={setEvaluatorName}
       onDone={() => setPhase("done")}
-    />
-  )
-
-  if (phase === "code") return (
-    <ScreenCode
-      estudio={estudio}
-      onVerify={() => {
-        sessionStorage.setItem(`pva_code_${studyId}`, "ok")
-        setPhase("welcome")
-      }}
     />
   )
 
@@ -2549,7 +2547,7 @@ export default function ResponderEvaluacionV2({ studyId }) {
     />
   )
 
-  // phase === "selector" (V2 default)
+  // Selector por defecto
   return (
     <ScreenSelector
       estudio={estudio}

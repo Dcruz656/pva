@@ -16,9 +16,8 @@ function Root() {
     return () => window.removeEventListener("hashchange", handler)
   }, [])
 
-  // Ruta pública — versión alternativa (v2)
-  const matchV2 = hash.match(/^#\/evaluar-v2\/([0-9a-f-]{36})/i)
-  if (matchV2) return <ResponderEvaluacionV2 studyId={matchV2[1]} />
+  // Ruta pública — versión alternativa (v2), instrumento fijo sin estudio
+  if (hash.startsWith("#/evaluar-v2")) return <ResponderEvaluacionV2 />
 
   // Ruta pública del evaluador original
   const match = hash.match(/^#\/evaluar\/([0-9a-f-]{36})/i)

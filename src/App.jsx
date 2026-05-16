@@ -830,7 +830,7 @@ function PreviewEvaluadorView() {
 
   function EvalCard({ e }) {
     const urlOriginal = `${baseUrl}#/evaluar/${e.id}`
-    const urlV2       = `${baseUrl}#/evaluar-v2/${e.id}`
+    const urlV2       = `${baseUrl}#/evaluar-v2`
     return (
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-3">
         <div>
