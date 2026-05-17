@@ -7,11 +7,11 @@ import { supabase } from "../lib/supabase"
 import { findVarData, TODAS_SUBDIMENSIONES as SUBDIMENSIONES, INDICES } from "../lib/variablesData"
 
 const LIKERT = [
-  { n: 1, label: "Totalmente de acuerdo",     short: "T. acuerdo",   emoji: "😄", color: { border: "border-green-500",  bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500"  } },
-  { n: 2, label: "De acuerdo",                short: "Acuerdo",      emoji: "🙂", color: { border: "border-lime-500",   bg: "bg-lime-50",   text: "text-lime-700",   dot: "bg-lime-500"   } },
+  { n: 1, label: "Totalmente en desacuerdo",  short: "T. desacuerdo",emoji: "😞", color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",    dot: "bg-red-400"    } },
+  { n: 2, label: "En desacuerdo",             short: "Desacuerdo",   emoji: "🙁", color: { border: "border-orange-400", bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-400" } },
   { n: 3, label: "Indiferente o neutro",      short: "Indiferente",  emoji: "😐", color: { border: "border-amber-400",  bg: "bg-amber-50",  text: "text-amber-600",  dot: "bg-amber-400"  } },
-  { n: 4, label: "En desacuerdo",             short: "Desacuerdo",   emoji: "🙁", color: { border: "border-orange-400", bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-400" } },
-  { n: 5, label: "Totalmente en desacuerdo",  short: "T. desacuerdo",emoji: "😞", color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",    dot: "bg-red-400"    } },
+  { n: 4, label: "De acuerdo",                short: "Acuerdo",      emoji: "🙂", color: { border: "border-lime-500",   bg: "bg-lime-50",   text: "text-lime-700",   dot: "bg-lime-500"   } },
+  { n: 5, label: "Totalmente de acuerdo",     short: "T. acuerdo",   emoji: "😄", color: { border: "border-green-500",  bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500"  } },
 ]
 
 const LIKERT_FACES = [
