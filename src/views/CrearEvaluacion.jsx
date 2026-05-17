@@ -48,7 +48,7 @@ function StepInfo({ form, onChange }) {
       </div>
       <div>
         <label className="block text-sm font-semibold text-on-surface mb-1">
-          Instrucciones para el evaluador
+          Instrucciones generales
         </label>
         <textarea
           value={form.instrucciones}
