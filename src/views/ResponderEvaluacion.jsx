@@ -636,7 +636,7 @@ function ScreenWelcome({ estudio, onStart }) {
         {/* Nota */}
         <div className="flex items-start gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-200 text-xs text-slate-500">
           <Icon name="info" className="text-slate-400 text-base flex-shrink-0 mt-0.5" />
-          <span>Puede guardar su progreso y continuar después desde el mismo dispositivo. Una vez enviada cada etapa, no podrá modificarla.</span>
+          <span>Puede guardar su progreso y continuar después desde el mismo dispositivo. Una vez enviada cada etapa, podrá modificarla en caso de ser necesario.</span>
         </div>
 
         {/* Descripción e instrucciones del estudio */}
