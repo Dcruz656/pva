@@ -552,9 +552,12 @@ function ScreenWelcome({ estudio, onStart }) {
             <p className="text-sm text-white/70 mt-3 leading-relaxed max-w-2xl">
               <em>PEML</em> es un modelo de evaluación orientado al análisis del carácter público de las bibliotecas
               de acceso público (comunitarias, públicas, académicas, especializadas) desde una perspectiva
-              multidimensional a partir de tres figuras: como espacio público, como sujeto colectivo, y como
-              objeto de debate y representaciones{" "}
-              <span className="text-white/50">(Esquivel Carreón &amp; Marzal García-Quismondo, 2026).</span>
+              multidimensional a partir de tres figuras: como espacio público, como sujeto colectivo, y, como
+              objeto de debate y representaciones. PEML es desmontable, permite estudiar cada figura de forma independiente.
+            </p>
+            <p className="text-sm text-white/70 mt-3 leading-relaxed max-w-2xl">
+              PEML tiene una fase de contexto, y otra de procesos donde aparecen las tres dimensiones que modifican
+              consciente o inconscientemente los espacios: diseño, gestión y uso (aquí es donde se incorpora el IPL del modelo).
             </p>
           </div>
           {/* ── Figura PEML ── */}
