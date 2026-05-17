@@ -685,8 +685,8 @@ function VariableCard({ variable, idx, rating, onChange }) {
   const CRITERIA = [
     { field: "claridad",    label: "Claridad",    hint: "¿Qué tan claro es el enunciado?" },
     { field: "relevancia",  label: "Relevancia",  hint: "¿Es relevante para el estudio?" },
-    { field: "coherencia",  label: "Coherencia",  hint: "¿Es coherente con la dimensión?" },
-    { field: "pertinencia", label: "Pertinencia", hint: "¿Es pertinente para la dimensión?" },
+    { field: "coherencia",  label: "Coherencia",  hint: "¿Es coherente con la subdimensión?" },
+    { field: "pertinencia", label: "Pertinencia", hint: "¿Es pertinente para la subdimensión?" },
   ]
 
   return (
