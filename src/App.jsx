@@ -810,111 +810,6 @@ function HistorialView() {
   )
 }
 
-// ── View: Preview Evaluador ───────────────────────────────────────────────
-
-function PreviewEvaluadorView() {
-  const [estudios, setEstudios] = useState([])
-  const [loading, setLoading]   = useState(true)
-
-  useEffect(() => {
-    supabase
-      .from("estudios")
-      .select("id, titulo, estado, codigo")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => { setEstudios(data || []); setLoading(false) })
-  }, [])
-
-  const baseUrl    = window.location.href.split("#")[0]
-  const publicadas = estudios.filter((e) => e.estado === "publicado")
-  const borrador   = estudios.filter((e) => e.estado !== "publicado")
-
-  function EvalCard({ e }) {
-    const urlOriginal = `${baseUrl}#/evaluar/${e.id}`
-    const urlV2       = `${baseUrl}#/evaluar-v2`
-    return (
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-3">
-        <div>
-          <p className="font-semibold text-on-surface text-sm">{e.titulo}</p>
-          {e.codigo && (
-            <p className="text-xs text-on-surface-variant mt-0.5 flex items-center gap-1">
-              <Icon name="key" className="text-xs" /> Código: <span className="font-mono font-bold">{e.codigo}</span>
-            </p>
-          )}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <a href={urlOriginal} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant text-on-surface-variant rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors">
-            <Icon name="open_in_new" className="text-sm" /> Versión original
-          </a>
-          <a href={urlV2} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-semibold hover:bg-violet-700 transition-colors">
-            <Icon name="open_in_new" className="text-sm" /> Versión alternativa (v2)
-          </a>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="font-bold text-2xl text-primary mb-1">Vista del Evaluador</h2>
-        <p className="text-sm text-on-surface-variant">
-          Compare ambas versiones del flujo de evaluación abriendo cualquier evaluación en una pestaña nueva.
-        </p>
-      </div>
-
-      {/* Comparativa */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Versión original</p>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            Todas las variables en una sola pantalla, agrupadas por dimensión con navegación por scroll.
-          </p>
-        </div>
-        <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-violet-600">Versión alternativa v2</p>
-          <p className="text-sm text-violet-800 leading-relaxed">
-            Navegación por índice → subdimensión → variable. Una variable a la vez con definiciones completas en cada nivel.
-          </p>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-16 text-on-surface-variant">
-          <Icon name="hourglass_empty" className="text-4xl block mb-2 mx-auto" />
-          <p className="text-sm">Cargando evaluaciones…</p>
-        </div>
-      ) : (
-        <>
-          {publicadas.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
-                <Icon name="public" className="text-base text-green-500" /> Publicadas
-              </h3>
-              {publicadas.map((e) => <EvalCard key={e.id} e={e} />)}
-            </div>
-          )}
-          {borrador.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
-                <Icon name="draft" className="text-base text-amber-500" /> Borrador
-              </h3>
-              {borrador.map((e) => <EvalCard key={e.id} e={e} />)}
-            </div>
-          )}
-          {estudios.length === 0 && (
-            <div className="text-center py-16 text-on-surface-variant border border-outline-variant rounded-xl">
-              <Icon name="quiz" className="text-4xl block mb-2 mx-auto" />
-              <p className="text-sm">No hay evaluaciones creadas aún.</p>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
 // ── View: Configuración ────────────────────────────────────────────────────
 
 function ConfiguracionView() {
@@ -994,7 +889,6 @@ export default function App({ onLogout }) {
     { icon: "dashboard",   label: "Panel de Control", viewKey: "dashboard" },
     { icon: "quiz",        label: "Mis Evaluaciones", viewKey: "evaluaciones" },
     { icon: "rate_review", label: "Respuestas",        viewKey: "historial" },
-    { icon: "preview",     label: "Vista Evaluador",   viewKey: "preview-evaluador" },
     { icon: "settings",    label: "Configuración",     viewKey: "configuracion" },
   ]
 
@@ -1066,15 +960,6 @@ export default function App({ onLogout }) {
             className="w-full bg-primary text-on-primary py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-2">
             <Icon name="add" className="text-base" /> Nueva Evaluación
           </button>
-          <a
-            href={`${window.location.href.split("#")[0]}#/evaluar-v2`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-2 py-2 text-sm font-semibold text-violet-600 hover:text-violet-800 transition-colors"
-          >
-            <Icon name="open_in_new" className="text-base" />
-            Ver versión alternativa ↗
-          </a>
           <a href="mailto:dcruz@uacj.mx"
             className="flex items-center gap-3 text-on-surface-variant px-2 py-2 hover:text-primary text-sm transition-colors">
             <Icon name="contact_support" /> Soporte
@@ -1115,7 +1000,6 @@ export default function App({ onLogout }) {
             />
           )}
           {view === "configuracion" && <ConfiguracionView />}
-          {view === "preview-evaluador" && <PreviewEvaluadorView />}
         </div>
       </main>
 

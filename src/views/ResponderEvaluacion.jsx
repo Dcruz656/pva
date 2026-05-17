@@ -557,6 +557,15 @@ function ScreenWelcome({ estudio, onStart }) {
               <span className="text-white/50">(Esquivel Carreón &amp; Marzal García-Quismondo, 2026).</span>
             </p>
           </div>
+          {/* ── Figura PEML ── */}
+          <div className="px-8 py-6 bg-slate-50 border-t border-slate-200">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Figura 1. Modelo PEML</p>
+            <img
+              src="/Figura 1 PEML.jpg"
+              alt="Figura 1. Publicness Evaluation Model for Libraries (PEML)"
+              className="w-full rounded-xl border border-slate-200 shadow-sm"
+            />
+          </div>
         </div>
 
         {/* ── Índices IPL expandibles ── */}

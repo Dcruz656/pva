@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react"
 import ReactDOM from "react-dom/client"
 import App from "./App.jsx"
-import ResponderEvaluacion   from "./views/ResponderEvaluacion.jsx"
-import ResponderEvaluacionV2 from "./views/ResponderEvaluacionV2.jsx"
+import ResponderEvaluacion from "./views/ResponderEvaluacion.jsx"
 import Login from "./views/Login.jsx"
 import "./App.css"
 
@@ -15,9 +14,6 @@ function Root() {
     window.addEventListener("hashchange", handler)
     return () => window.removeEventListener("hashchange", handler)
   }, [])
-
-  // Ruta pública — versión alternativa (v2), instrumento fijo sin estudio
-  if (hash.startsWith("#/evaluar-v2")) return <ResponderEvaluacionV2 />
 
   // Ruta pública del evaluador original
   const match = hash.match(/^#\/evaluar\/([0-9a-f-]{36})/i)
