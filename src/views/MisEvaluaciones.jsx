@@ -207,6 +207,17 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
     })
   }
 
+  async function resetEstudio(estudio) {
+    setConfirm({
+      message: `¿Borrar todo el avance guardado de "${estudio.titulo}"? Se eliminarán todas las respuestas registradas. Esta acción no se puede deshacer.`,
+      onConfirm: async () => {
+        await supabase.from("respuestas").delete().eq("estudio_id", estudio.id)
+        localStorage.removeItem(`pva_session_${estudio.id}`)
+        setConfirm(null)
+      },
+    })
+  }
+
   async function deleteEstudio(estudio) {
     setConfirm({
       message: `¿Eliminar permanentemente "${estudio.titulo}"? Esta acción no se puede deshacer.`,
@@ -521,6 +532,14 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
                     >
                       <Icon name="open_in_new" className="text-base" />
                       <span className="hidden sm:inline">Responder</span>
+                    </button>
+                    {/* Reset avance */}
+                    <button
+                      onClick={() => resetEstudio(estudio)}
+                      title="Borrar avance guardado"
+                      className="p-2 border border-outline-variant rounded-lg text-on-surface-variant hover:text-amber-600 hover:border-amber-300 transition-colors"
+                    >
+                      <Icon name="restart_alt" className="text-base" />
                     </button>
                     {/* Editar */}
                     <button

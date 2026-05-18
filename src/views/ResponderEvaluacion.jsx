@@ -148,127 +148,9 @@ function ScreenClosed({ estudio }) {
   )
 }
 
-function ScreenName({ estudio, sessionId, evaluatorName, onSetName, onDone }) {
-  const [saving, setSaving] = useState(false)
-  const [error, setError]   = useState(false)
-  const trimmed = evaluatorName.trim()
-
-  async function handleConfirm() {
-    if (!trimmed) return
-    setSaving(true)
-    setError(false)
-    const { error: err } = await supabase
-      .from("respuestas")
-      .update({ nombre_evaluador: trimmed })
-      .eq("session_id", sessionId)
-    setSaving(false)
-    if (err) { setError(true); return }
-    onDone()
-  }
-
-  return (
-    <EvalLayout progress={95} title={estudio.titulo}>
-      <div className="flex flex-col items-center gap-6 py-14 text-center max-w-md mx-auto">
-
-        {/* Icono */}
-        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-          <Icon name="badge" className="text-primary text-4xl" />
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="font-bold text-2xl text-slate-800">Identificación del evaluador</h2>
-          <p className="text-slate-500 text-sm leading-relaxed">
-            Para registrar su participación, ingrese su nombre completo.<br />
-            Su nombre quedará asociado a todas sus respuestas.
-          </p>
-        </div>
-
-        {/* Input */}
-        <div className="w-full space-y-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block text-left">
-            Nombre completo
-          </label>
-          <input
-            type="text"
-            value={evaluatorName}
-            onChange={(e) => onSetName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
-            placeholder="Ej. María García López"
-            autoFocus
-            className={`w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all
-              ${trimmed ? "border-primary bg-primary/5" : "border-slate-200 bg-white"}`}
-          />
-          {error && (
-            <p className="text-xs text-red-500 flex items-center gap-1">
-              <Icon name="error" className="text-sm" />
-              Ocurrió un error al guardar. Intente de nuevo.
-            </p>
-          )}
-        </div>
-
-        {/* Botón */}
-        <button
-          onClick={handleConfirm}
-          disabled={!trimmed || saving}
-          className="w-full py-3.5 bg-primary text-white font-bold rounded-2xl shadow-md text-base
-                     hover:opacity-90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed
-                     transition-all flex items-center justify-center gap-2"
-        >
-          <Icon name={saving ? "sync" : "send"} className={`text-xl ${saving ? "animate-spin" : ""}`} />
-          {saving ? "Registrando…" : "Confirmar y finalizar"}
-        </button>
-
-        <p className="text-xs text-slate-400">
-          El botón se activa una vez que ingrese su nombre.
-        </p>
-      </div>
-    </EvalLayout>
-  )
-}
-
 function ScreenDone({ estudio, sessionId, onEdit }) {
   const variables = estudio.variables || []
   const dims = [...new Set(variables.map((v) => v.dimension))]
-
-  const [nombre, setNombre]     = useState("")
-  const [editing, setEditing]   = useState(false)
-  const [draft, setDraft]       = useState("")
-  const [saving, setSaving]     = useState(false)
-  const [savedOk, setSavedOk]   = useState(false)
-
-  // Cargar nombre existente al montar
-  useEffect(() => {
-    supabase
-      .from("respuestas")
-      .select("nombre_evaluador")
-      .eq("session_id", sessionId)
-      .not("nombre_evaluador", "is", null)
-      .limit(1)
-      .then(({ data }) => {
-        const found = data?.[0]?.nombre_evaluador || ""
-        setNombre(found)
-        setDraft(found)
-        if (!found) setEditing(true) // abrir automáticamente si no tiene nombre
-      })
-  }, [sessionId])
-
-  async function handleSave() {
-    const trimmed = draft.trim()
-    if (!trimmed) return
-    setSaving(true)
-    const { error } = await supabase
-      .from("respuestas")
-      .update({ nombre_evaluador: trimmed })
-      .eq("session_id", sessionId)
-    setSaving(false)
-    if (!error) {
-      setNombre(trimmed)
-      setDraft(trimmed)
-      setEditing(false)
-      setSavedOk(true)
-      setTimeout(() => setSavedOk(false), 3000)
-    }
-  }
 
   return (
     <EvalLayout progress={100} title={estudio.titulo}>
@@ -288,68 +170,6 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
           <p className="text-slate-500 text-sm max-w-md">
             Su validación de <strong>"{estudio.titulo}"</strong> ha sido registrada exitosamente.
           </p>
-        </div>
-
-        {/* Nombre del evaluador */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-md text-left overflow-hidden">
-          <div className="bg-primary px-5 py-3 flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/70">Nombre del evaluador</p>
-            {!editing && (
-              <button
-                onClick={() => { setDraft(nombre); setEditing(true) }}
-                className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white transition-colors"
-              >
-                <Icon name="edit" className="text-sm" />
-                Editar
-              </button>
-            )}
-          </div>
-          <div className="px-5 py-4">
-            {editing ? (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSave()}
-                  placeholder="Escriba su nombre completo"
-                  autoFocus
-                  className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all
-                    ${draft.trim() ? "border-primary bg-primary/5" : "border-slate-200"}`}
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSave}
-                    disabled={!draft.trim() || saving}
-                    className="flex-1 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm
-                               hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed
-                               flex items-center justify-center gap-1.5 transition-all"
-                  >
-                    <Icon name={saving ? "sync" : "check"} className={`text-base ${saving ? "animate-spin" : ""}`} />
-                    {saving ? "Guardando…" : "Guardar nombre"}
-                  </button>
-                  {nombre && (
-                    <button
-                      onClick={() => { setDraft(nombre); setEditing(false) }}
-                      className="px-4 py-2.5 border border-slate-200 text-slate-500 rounded-xl text-sm hover:bg-slate-50"
-                    >
-                      <Icon name="close" className="text-base" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Icon name="person" className="text-primary text-base flex-shrink-0" />
-                <span className="font-semibold text-slate-800 text-sm">{nombre}</span>
-                {savedOk && (
-                  <span className="ml-auto text-xs text-green-600 flex items-center gap-1">
-                    <Icon name="check_circle" className="text-sm" /> Guardado
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Resumen */}
@@ -1982,15 +1802,6 @@ export default function ResponderEvaluacion({ studyId }) {
   if (phase === "error")   return <ScreenError />
   if (phase === "closed")  return <ScreenClosed estudio={estudio} />
   if (phase === "done")    return <ScreenDone estudio={estudio} sessionId={sessionId} onEdit={() => setPhase("form")} />
-  if (phase === "name")    return (
-    <ScreenName
-      estudio={estudio}
-      sessionId={sessionId}
-      evaluatorName={evaluatorName}
-      onSetName={setEvaluatorName}
-      onDone={() => setPhase("done")}
-    />
-  )
   if (phase === "code") {
     return (
       <ScreenCode
@@ -2020,7 +1831,7 @@ export default function ResponderEvaluacion({ studyId }) {
       sessionId={sessionId}
       evaluatorName={evaluatorName}
       onSetName={setEvaluatorName}
-      onDone={() => setPhase("name")}
+      onDone={() => setPhase("done")}
       onSaveAndExit={() => setPhase("saved_draft")}
     />
   )
@@ -2034,7 +1845,7 @@ export default function ResponderEvaluacion({ studyId }) {
       onDone={() => {
         const base = estudioRef.current ?? estudio
         const criterios = getCriteriosEval(base)
-        if (criterios.length === 0) { setPhase("name"); return }
+        if (criterios.length === 0) { setPhase("done"); return }
         const nextEstudio = { ...base, criterios_evaluacion: criterios }
         estudioRef.current = nextEstudio
         setEstudio(nextEstudio)
