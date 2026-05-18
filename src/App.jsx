@@ -916,7 +916,7 @@ export default function App({ onLogout }) {
 
       {/* ── Header ── */}
       <header className="bg-surface-container-lowest border-b border-outline-variant fixed top-0 left-0 right-0 z-40">
-        <div className="flex justify-between items-center w-full px-6 xl:px-10 h-16 max-w-[1440px] mx-auto">
+        <div className="flex justify-between items-center w-full px-6 xl:px-10 xl:pl-[280px] h-16 max-w-[1440px] mx-auto">
           <button onClick={() => navigate("dashboard")}
             className="font-bold text-lg text-primary tracking-tight hover:opacity-80 transition-opacity">
             Plataforma de Validación Académica
