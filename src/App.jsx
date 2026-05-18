@@ -456,8 +456,9 @@ function HistorialView() {
               className="w-4 h-4 accent-primary cursor-pointer" />
           </td>
         )}
-        <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[140px] truncate" title={estudioMap[r.estudio_id]}>
-          {estudioMap[r.estudio_id] ?? r.estudio_id?.substring(0, 8) + "…"}
+        <td className="px-4 py-3 text-xs max-w-[160px]" title={estudioMap[r.estudio_id]}>
+          <p className="truncate text-on-surface-variant">{estudioMap[r.estudio_id] ?? "—"}</p>
+          <p className="font-mono text-[10px] text-slate-400">#{r.estudio_id?.substring(0, 8).toUpperCase()}</p>
         </td>
         <td className="px-4 py-3 font-medium text-on-surface text-sm">{r.variable}</td>
         <td className="px-4 py-3 text-on-surface-variant text-xs">{r.dimension}</td>
@@ -482,8 +483,9 @@ function HistorialView() {
               className="w-4 h-4 accent-primary cursor-pointer" />
           </td>
         )}
-        <td className="px-4 py-3 text-on-surface-variant text-xs max-w-[140px] truncate" title={estudioMap[r.estudio_id]}>
-          {estudioMap[r.estudio_id] ?? r.estudio_id?.substring(0, 8) + "…"}
+        <td className="px-4 py-3 text-xs max-w-[160px]" title={estudioMap[r.estudio_id]}>
+          <p className="truncate text-on-surface-variant">{estudioMap[r.estudio_id] ?? "—"}</p>
+          <p className="font-mono text-[10px] text-slate-400">#{r.estudio_id?.substring(0, 8).toUpperCase()}</p>
         </td>
         <td className="px-4 py-3 font-medium text-on-surface text-sm">{r.variable}</td>
         <td className="px-4 py-3 text-center"><PertinenciaBadge val={r.claridad} /></td>

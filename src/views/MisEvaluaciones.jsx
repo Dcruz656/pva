@@ -432,6 +432,9 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
                     <div className="flex items-center gap-3 flex-wrap mb-2">
                       <BadgeEstado estado={estudio.estado} />
                       <BadgeAcceso tipo={estudio.modo_acceso} codigo={estudio.codigo} />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-slate-100 text-slate-500 border border-slate-200" title="Identificador único de la evaluación">
+                        #{estudio.id.substring(0, 8).toUpperCase()}
+                      </span>
                       {estudio.modo_acceso === "invitacion_codigo" && (
                         <button onClick={() => copyCode(estudio)}
                           className="inline-flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary transition-colors"
