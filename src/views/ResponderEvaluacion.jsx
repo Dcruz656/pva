@@ -233,11 +233,20 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
           </div>
         </div>
 
-        {/* Nombre del evaluador */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-md text-left overflow-hidden">
+        {/* Nombre del evaluador — obligatorio */}
+        <div className={`rounded-2xl border shadow-sm w-full max-w-md text-left overflow-hidden transition-all ${
+          !nombre ? "border-amber-300 ring-2 ring-amber-200" : "border-slate-200"
+        }`}>
           <div className="bg-primary px-5 py-3 flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/70">Nombre del evaluador</p>
-            {!editing && (
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-bold uppercase tracking-widest text-white/70">Nombre del evaluador</p>
+              {!nombre && (
+                <span className="text-[10px] font-bold uppercase tracking-widest bg-amber-400 text-white px-2 py-0.5 rounded-full">
+                  Requerido
+                </span>
+              )}
+            </div>
+            {!editing && nombre && (
               <button
                 onClick={() => { setDraft(nombre); setEditing(true) }}
                 className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white transition-colors"
@@ -246,7 +255,13 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
               </button>
             )}
           </div>
-          <div className="px-5 py-4">
+          <div className="px-5 py-4 bg-white">
+            {!nombre && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 flex items-center gap-2">
+                <Icon name="warning" className="text-sm flex-shrink-0" />
+                Debe ingresar su nombre para completar el proceso.
+              </p>
+            )}
             {editing ? (
               <div className="space-y-3">
                 <input
@@ -268,7 +283,7 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
                                flex items-center justify-center gap-1.5 transition-all"
                   >
                     <Icon name={saving ? "sync" : "check"} className={`text-base ${saving ? "animate-spin" : ""}`} />
-                    {saving ? "Guardando…" : "Guardar nombre"}
+                    {saving ? "Guardando…" : "Confirmar nombre"}
                   </button>
                   {nombre && (
                     <button
@@ -294,30 +309,34 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
           </div>
         </div>
 
-        {/* Confirmaciones */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 w-full max-w-md space-y-3">
-          {[
-            { icon: "check_circle",   color: "text-green-500", text: "Respuestas guardadas en el sistema" },
-            { icon: "science",        color: "text-primary",   text: "Sus datos contribuyen a la investigación" },
-            { icon: "lock",           color: "text-slate-400", text: "Información tratada de forma confidencial" },
-          ].map(({ icon, color, text }) => (
-            <div key={text} className="flex items-center gap-3 text-sm text-slate-700">
-              <Icon name={icon} className={`${color} flex-shrink-0`} />
-              {text}
+        {/* Confirmaciones — solo visibles cuando el nombre está registrado */}
+        {nombre && (
+          <>
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 w-full max-w-md space-y-3">
+              {[
+                { icon: "check_circle",   color: "text-green-500", text: "Respuestas guardadas en el sistema" },
+                { icon: "science",        color: "text-primary",   text: "Sus datos contribuyen a la investigación" },
+                { icon: "lock",           color: "text-slate-400", text: "Información tratada de forma confidencial" },
+              ].map(({ icon, color, text }) => (
+                <div key={text} className="flex items-center gap-3 text-sm text-slate-700">
+                  <Icon name={icon} className={`${color} flex-shrink-0`} />
+                  {text}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Editar respuestas */}
-        <button
-          onClick={onEdit}
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-primary transition-colors"
-        >
-          <Icon name="edit" className="text-base" />
-          Editar mis respuestas
-        </button>
+            {/* Editar respuestas */}
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-2 text-sm text-slate-400 hover:text-primary transition-colors"
+            >
+              <Icon name="edit" className="text-base" />
+              Editar mis respuestas
+            </button>
+          </>
+        )}
 
-        <p className="text-xs text-slate-400">Puede cerrar esta ventana con seguridad.</p>
+        {nombre && <p className="text-xs text-slate-400">Puede cerrar esta ventana con seguridad.</p>}
       </div>
     </EvalLayout>
   )
