@@ -179,7 +179,8 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
           </div>
           <div className="divide-y divide-slate-100">
             {[
-              { icon: "quiz",      label: "Variables evaluadas",  value: variables.length },
+              { icon: "tag",       label: "Identificador",         value: `#${estudio.id.substring(0, 8).toUpperCase()}` },
+              { icon: "quiz",      label: "Variables evaluadas",   value: variables.length },
               { icon: "category",  label: "Dimensiones cubiertas", value: dims.length },
               { icon: "badge",     label: "ID de sesión",          value: sessionId.substring(0, 12) + "…" },
             ].map(({ icon, label, value }) => (
