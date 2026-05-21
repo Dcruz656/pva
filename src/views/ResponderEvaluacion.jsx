@@ -153,7 +153,7 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
   const dims = [...new Set(variables.map((v) => v.dimension))]
 
   const [nombre, setNombre]   = useState("")
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(true)
   const [draft, setDraft]     = useState("")
   const [saving, setSaving]   = useState(false)
   const [savedOk, setSavedOk] = useState(false)
@@ -169,7 +169,6 @@ function ScreenDone({ estudio, sessionId, onEdit }) {
         const found = data?.[0]?.nombre_evaluador || ""
         setNombre(found)
         setDraft(found)
-        if (!found) setEditing(true)
       })
   }, [sessionId])
 
