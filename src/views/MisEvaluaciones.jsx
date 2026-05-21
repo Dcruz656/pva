@@ -372,10 +372,25 @@ export default function MisEvaluaciones({ onCreateNew, onOpenEvaluation, onEdit,
                 ))}
             </select>
 
+            {/* Evaluador */}
+            {filterOptions.evaluadores.length > 0 && (
+              <select
+                value={filterEvaluador}
+                onChange={(e) => setFilterEvaluador(e.target.value)}
+                className={`px-3 py-1.5 border rounded-lg text-sm outline-none transition-colors
+                  ${filterEvaluador ? "border-primary bg-primary/5 text-primary font-semibold" : "border-outline-variant bg-surface text-on-surface-variant"}`}
+              >
+                <option value="">Todos los evaluadores</option>
+                {filterOptions.evaluadores.map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            )}
+
             {/* Limpiar filtros */}
-            {(filterIndice || filterDimension || filterVariable) && (
+            {(filterIndice || filterDimension || filterVariable || filterEvaluador) && (
               <button
-                onClick={() => { setFilterIndice(""); setFilterDimension(""); setFilterVariable("") }}
+                onClick={() => { setFilterIndice(""); setFilterDimension(""); setFilterVariable(""); setFilterEvaluador("") }}
                 className="flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1.5"
               >
                 <Icon name="close" className="text-sm" />
