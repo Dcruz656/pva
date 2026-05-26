@@ -131,12 +131,6 @@ export const SUBDIMENSIONES = [
         criterios: ["Espacios de trabajo", "Comodidad del mobiliario"],
       },
       {
-        clave: "EC3",
-        nombre: "EC3. Comodidad de los espacios",
-        descripcion: "Evalúa el nivel de confort físico, funcional y acústico de los espacios destinados a la permanencia y uso de los usuarios.",
-        criterios: ["Espacios de trabajo", "Confort acústico", "Comodidad del mobiliario"],
-      },
-      {
         clave: "EE1",
         nombre: "EE1. Instalaciones básicas",
         descripcion: "Evalúa la disponibilidad y calidad de servicios básicos complementarios para la atención y permanencia de usuarios.",
