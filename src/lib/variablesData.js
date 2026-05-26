@@ -120,9 +120,9 @@ export const SUBDIMENSIONES = [
       },
       {
         clave: "EC1",
-        nombre: "EC1. Iluminación",
-        descripcion: "Evalúa la calidad y adecuación de la iluminación natural y artificial en los distintos espacios de la biblioteca.",
-        criterios: ["Sistema de iluminación"],
+        nombre: "EC1. Comodidad ambiental",
+        descripcion: "Evalúa las condiciones ambientales internas relacionadas con temperatura, ventilación, confort térmico, iluminación natural y artificial.",
+        criterios: ["Sistema de iluminación", "Microclimas", "Confort acústico"],
       },
       {
         clave: "EC2",
