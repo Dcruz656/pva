@@ -126,9 +126,9 @@ export const SUBDIMENSIONES = [
       },
       {
         clave: "EC2",
-        nombre: "EC2. Comodidad climática",
-        descripcion: "Evalúa las condiciones ambientales internas relacionadas con temperatura, ventilación y confort térmico.",
-        criterios: ["Microclimas"],
+        nombre: "EC2. Comodidad de los Espacios",
+        descripcion: "Evalúa el nivel de confort físico y funcional de los espacios destinados a la permanencia y uso de los usuarios.",
+        criterios: ["Espacios de trabajo", "Comodidad del mobiliario"],
       },
       {
         clave: "EC3",
