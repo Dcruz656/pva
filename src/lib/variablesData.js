@@ -92,7 +92,7 @@ export const SUBDIMENSIONES = [
         clave: "ES3",
         nombre: "ES3. Seguridad de las personas",
         descripcion: "Evalúa las condiciones que garantizan la integridad física y el bienestar de los usuarios dentro de la biblioteca.",
-        criterios: ["Rutas de evacuación", "Elementos de emergencia", "Protección contra crimen", "Protección contra ruidos"],
+        criterios: ["Rutas de evacuación", "Elementos de emergencia", "Protección contra crimen"],
       },
       {
         clave: "ES4",
@@ -354,7 +354,7 @@ export const SUBDIMENSIONES_INDICE2 = [
       {
         clave: "SI1",
         nombre: "SI1. Posturas oficiales",
-        descripcion: "Conjunto de declaraciones, lineamientos y posicionamientos institucionales que orientan el diseño, gestión y rol social de las bibliotecas y de su personal (declaraciones, directrices, manifiestos).",
+        descripcion: "Conjunto de declaraciones, lineamientos y posicionamientos institucionales que orientan el diseño, gestión y rol social de las bibliotecas y de su personal (Declaraciones manifiestos).",
         criterios: [],
       },
       {
@@ -366,7 +366,7 @@ export const SUBDIMENSIONES_INDICE2 = [
       {
         clave: "SI3",
         nombre: "SI3. Compromisos formales",
-        descripcion: "Compromisos que aseguran recursos, planificación y marcos éticos para el desarrollo bibliotecario (agendas, planes de trabajo).",
+        descripcion: "Los compromisos institucionales o gubernamentales que marcan una hoja de ruta con objetivos específicos que deben cumplirse en un tiempo determinado. (agendas, planes de trabajo)",
         criterios: [],
       },
       {
@@ -403,6 +403,18 @@ export const SUBDIMENSIONES_INDICE2 = [
         clave: "SI9",
         nombre: "SI9. Cooperación",
         descripcion: "Acciones de articulación institucional que fomentan la colaboración entre bibliotecas, organizaciones y comunidad para fortalecer su desarrollo e impacto.",
+        criterios: [],
+      },
+      {
+        clave: "SI10",
+        nombre: "SI10. Recomendaciones operativas",
+        descripcion: "Guías prácticas y directrices que indican cómo se deberían hacer las cosas. Son recomendaciones técnicas para la gestión diaria.",
+        criterios: [],
+      },
+      {
+        clave: "SI11",
+        nombre: "SI11. Reconocimientos",
+        descripcion: "Distinciones, premios o menciones institucionales que valoran las buenas prácticas, innovación, trayectoria y aportes de bibliotecas y personal bibliotecario.",
         criterios: [],
       },
     ],
