@@ -33,7 +33,7 @@ export const SUBDIMENSIONES = [
       {
         clave: "EA1",
         nombre: "EA1. Acceso y accesibilidad física",
-        descripcion: "Evalúa las condiciones físicas y espaciales que permiten el ingreso, desplazamiento y uso de las instalaciones.",
+        descripcion: "Evalúa las condiciones físicas y espaciales que permiten la entrada al lugar, desplazamiento y uso de las instalaciones.",
         criterios: [
           "Barreras de acceso de diseño exterior",
           "Barreras de acceso de diseño interior",
@@ -79,13 +79,13 @@ export const SUBDIMENSIONES = [
       {
         clave: "ES1",
         nombre: "ES1. Seguridad en las instalaciones",
-        descripcion: "Evalúa la seguridad del edificio y de la infraestructura.",
+        descripcion: "Evalúa la seguridad del edificio y de su infraestructura.",
         criterios: ["Seguridad vial", "Sistema contra incendios", "Sistema de vigilancia", "Sistema de iluminación"],
       },
       {
         clave: "ES2",
         nombre: "ES2. Seguridad en las colecciones",
-        descripcion: "Evalúa las medidas destinadas a la protección, conservación y resguardo de los materiales y recursos bibliográficos.",
+        descripcion: "Evalúa las medidas destinadas a la seguridad de los materiales y recursos bibliográficos.",
         criterios: ["Protección de colecciones"],
       },
       {
@@ -115,7 +115,7 @@ export const SUBDIMENSIONES = [
       {
         clave: "EF3",
         nombre: "EF3. Propiedad/agente",
-        descripcion: "Evalúa el tipo de responsabilidad institucional que tiene el agente del espacio bibliotecario.",
+        descripcion: "Evalúa el tipo de responsabilidad institucional y jurídica que tiene la biblioteca.",
         criterios: ["Responsabilidad institucional"],
       },
       {
@@ -133,13 +133,13 @@ export const SUBDIMENSIONES = [
       {
         clave: "EE1",
         nombre: "EE1. Instalaciones básicas",
-        descripcion: "Evalúa la disponibilidad y calidad de servicios básicos complementarios para la atención y permanencia de usuarios.",
+        descripcion: "El soporte logístico de la infraestructura de la biblioteca. Evalúa la presencia y estado de los servicios esenciales que todo lugar debe tener para garantizar una estancia digna, higiénica y funcional para los usuarios y el personal.",
         criterios: ["Baños", "Bebederos", "Lockers", "Basura", "Estacionamiento"],
       },
       {
         clave: "EE2",
         nombre: "EE2. Mobiliario",
-        descripcion: "Evalúa la adecuación, ergonomía y funcionalidad del mobiliario disponible para diferentes actividades y usuarios.",
+        descripcion: "Evalúa la adecuación, ergonomía y funcionalidad del mobiliario disponible para diferentes actividades, usuarios y servicios.",
         criterios: ["Mobiliario especializado"],
       },
       {
@@ -265,7 +265,7 @@ export const SUBDIMENSIONES_INDICE2 = [
       },
       {
         clave: "SC2",
-        nombre: "SC2. Acciones de agencia",
+        nombre: "SC2. Acciones como agente",
         descripcion: "Capacidad de la comunidad para ejercer influencia efectiva y deliberada en la gobernanza y evaluación de la biblioteca, expresando sus intereses, necesidades y propuestas.",
         criterios: [],
       },
@@ -348,7 +348,7 @@ export const SUBDIMENSIONES_INDICE2 = [
       {
         clave: "SI1",
         nombre: "SI1. Posturas oficiales",
-        descripcion: "Conjunto de declaraciones, lineamientos y posicionamientos institucionales que orientan el diseño, gestión y rol social de las bibliotecas y de su personal (Declaraciones manifiestos).",
+        descripcion: "Conjunto de declaraciones y posicionamientos institucionales que orientan el diseño, gestión y rol social de las bibliotecas y de su personal (declaraciones, manifiestos).",
         criterios: [],
       },
       {
@@ -448,8 +448,8 @@ export const SUBDIMENSIONES_INDICE3 = [
       },
       {
         clave: "OD5",
-        nombre: "OD5. Cabildeo (lobbying)",
-        descripcion: "Acciones de incidencia directa ante actores de poder o toma de decisiones para influir en políticas, recursos y definiciones relacionadas con las bibliotecas.",
+        nombre: "OD5. Defensoría (advocacy)",
+        descripcion: "Acciones de gestión y persuasión directa ante tomadores de decisiones para posicionar a las bibliotecas en la agenda pública, asegurar su financiamiento y promover marcos normativos que las fortalezcan.",
         criterios: [],
       },
       {
