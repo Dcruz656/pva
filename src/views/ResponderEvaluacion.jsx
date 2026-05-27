@@ -7,11 +7,11 @@ import { supabase } from "../lib/supabase"
 import { findVarData, TODAS_SUBDIMENSIONES as SUBDIMENSIONES, INDICES } from "../lib/variablesData"
 
 const LIKERT = [
-  { n: 1, label: "Totalmente en desacuerdo",  short: "T. desacuerdo",emoji: "😞", color: { border: "border-red-400",    bg: "bg-red-50",    text: "text-red-600",    dot: "bg-red-400"    } },
-  { n: 2, label: "En desacuerdo",             short: "Desacuerdo",   emoji: "🙁", color: { border: "border-orange-400", bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-400" } },
-  { n: 3, label: "Indiferente o neutro",      short: "Indiferente",  emoji: "😐", color: { border: "border-amber-400",  bg: "bg-amber-50",  text: "text-amber-600",  dot: "bg-amber-400"  } },
-  { n: 4, label: "De acuerdo",                short: "Acuerdo",      emoji: "🙂", color: { border: "border-lime-500",   bg: "bg-lime-50",   text: "text-lime-700",   dot: "bg-lime-500"   } },
-  { n: 5, label: "Totalmente de acuerdo",     short: "T. acuerdo",   emoji: "😄", color: { border: "border-green-500",  bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500"  } },
+  { n: 1, label: "Totalmente en desacuerdo",  short: "T. desacuerdo",emoji: "😞", color: { border: "border-red-400",    bg: "bg-red-50",    bgIdle: "bg-red-100",    text: "text-red-600",    dot: "bg-red-400"    } },
+  { n: 2, label: "En desacuerdo",             short: "Desacuerdo",   emoji: "🙁", color: { border: "border-orange-400", bg: "bg-orange-50", bgIdle: "bg-orange-100", text: "text-orange-600", dot: "bg-orange-400" } },
+  { n: 3, label: "Indiferente o neutro",      short: "Indiferente",  emoji: "😐", color: { border: "border-amber-400",  bg: "bg-amber-50",  bgIdle: "bg-amber-100",  text: "text-amber-600",  dot: "bg-amber-400"  } },
+  { n: 4, label: "De acuerdo",                short: "Acuerdo",      emoji: "🙂", color: { border: "border-lime-500",   bg: "bg-lime-50",   bgIdle: "bg-lime-100",   text: "text-lime-700",   dot: "bg-lime-500"   } },
+  { n: 5, label: "Totalmente de acuerdo",     short: "T. acuerdo",   emoji: "😄", color: { border: "border-green-500",  bg: "bg-green-50",  bgIdle: "bg-green-100",  text: "text-green-700",  dot: "bg-green-500"  } },
 ]
 
 const LIKERT_FACES = [
@@ -768,7 +768,7 @@ function VariableCard({ variable, idx, rating, onChange }) {
                       className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 cursor-pointer transition-all select-none
                         ${selected
                           ? `${color.border} ${color.bg} shadow-sm`
-                          : `${color.bg} border-transparent opacity-60 hover:opacity-100 hover:${color.border}`
+                          : `${color.bgIdle} border-transparent hover:${color.border}`
                         }`}
                     >
                       <span className={`text-base font-bold leading-none transition-colors ${color.text}`}>
@@ -1655,7 +1655,7 @@ function ScreenCriteriosEval({ estudio, sessionId, evaluatorName, onSetName, onD
                         className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 cursor-pointer transition-all select-none
                           ${isSelected
                             ? `${color.border} ${color.bg} shadow-sm`
-                            : `${color.bg} border-transparent opacity-60 hover:opacity-100`
+                            : `${color.bgIdle} border-transparent hover:${color.border}`
                           }`}
                       >
                         <span className="text-lg leading-none">{emoji}</span>
