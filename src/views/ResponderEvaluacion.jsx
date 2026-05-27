@@ -549,6 +549,22 @@ function ScreenWelcome({ estudio, onStart }) {
                 {isOpen && (
                   <div className={`px-5 pb-5 ${idx.colorLight} border-t ${idx.colorBorder}`}>
                     <p className="text-sm text-slate-700 leading-relaxed mt-4 mb-4">{idx.descripcion}</p>
+                    {idx.id === 1 && (
+                      <div className="flex items-start justify-between gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 mb-4">
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          El mapa completo de variables y criterios que serán valoradas se encuentra en el archivo adjunto. En él se aprecia, además, cómo las variables y criterios podrían cruzar las tres dimensiones que modifican el espacio (Diseño, Gestión y Uso) para llevarse al estudio de campo.
+                        </p>
+                        <a
+                          href="/Indice Biblioteca como Espacio Público.xlsx"
+                          download
+                          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
+                          title="Descargar archivo Excel"
+                        >
+                          <Icon name="download" className="text-sm" />
+                          Descargar
+                        </a>
+                      </div>
+                    )}
                     <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Subdimensiones</p>
                     <div className="space-y-2">
                       {idx.subdimensiones.map((sub) => (
