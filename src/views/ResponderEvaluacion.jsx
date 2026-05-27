@@ -1658,7 +1658,7 @@ function ScreenCriteriosEval({ estudio, sessionId, evaluatorName, onSetName, onD
                             : `${color.bgIdle} border-transparent hover:${color.border}`
                           }`}
                       >
-                        <span className="text-lg leading-none">{emoji}</span>
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-lg leading-none ${isSelected ? color.bg : color.bgIdle}`}>{emoji}</span>
                         <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${color.text}`}>
                           {label}
                         </span>
