@@ -767,14 +767,14 @@ function VariableCard({ variable, idx, rating, onChange }) {
                       key={n}
                       className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 cursor-pointer transition-all select-none
                         ${selected
-                          ? `${color.border} ${color.bg}`
-                          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                          ? `${color.border} ${color.bg} shadow-sm`
+                          : `${color.bg} border-transparent opacity-60 hover:opacity-100 hover:${color.border}`
                         }`}
                     >
-                      <span className={`text-base font-bold leading-none transition-colors ${selected ? color.text : "text-slate-400"}`}>
+                      <span className={`text-base font-bold leading-none transition-colors ${color.text}`}>
                         {n}
                       </span>
-                      <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${selected ? color.text : "text-slate-300"}`}>
+                      <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${color.text}`}>
                         {label}
                       </span>
                       <input
@@ -1654,12 +1654,12 @@ function ScreenCriteriosEval({ estudio, sessionId, evaluatorName, onSetName, onD
                         key={n}
                         className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 cursor-pointer transition-all select-none
                           ${isSelected
-                            ? `${color.border} ${color.bg}`
-                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                            ? `${color.border} ${color.bg} shadow-sm`
+                            : `${color.bg} border-transparent opacity-60 hover:opacity-100`
                           }`}
                       >
                         <span className="text-lg leading-none">{emoji}</span>
-                        <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${isSelected ? color.text : "text-slate-300"}`}>
+                        <span className={`text-[9px] leading-tight font-medium text-center transition-colors ${color.text}`}>
                           {label}
                         </span>
                         <input
