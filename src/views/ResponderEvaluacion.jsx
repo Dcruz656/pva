@@ -515,6 +515,17 @@ function ScreenWelcome({ estudio, onStart }) {
           <div className="px-5 py-4 border-b border-slate-100">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">Marco de evaluación</p>
             <h3 className="font-bold text-slate-800 text-sm">IPL — haga clic para ampliar</h3>
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+              Consulte mayor información sobre el concepto <em>publicness</em> y cómo se conformaron las tres figuras en que la biblioteca configura su <em>publicness</em> directamente en el artículo{" "}
+              <a
+                href="https://www.degruyterbrill.com/document/doi/10.1515/libri-2025-0200/html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-semibold underline hover:opacity-75 transition-opacity"
+              >
+                Publicness Shaping in Public Access Libraries
+              </a>.
+            </p>
           </div>
           {INDICES_IPL.map((idx, i) => {
             const isOpen = expandedIdx === idx.id
