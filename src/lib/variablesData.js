@@ -292,7 +292,7 @@ export const SUBDIMENSIONES_INDICE2 = [
       {
         clave: "SB1",
         nombre: "SB1. Procesos participativos (Co-creación)",
-        descripcion: "Capacidad del personal bibliotecario para involucrar activamente a la comunidad en la toma de decisiones, promoviendo procesos colaborativos que influyen en el diseño, gestión y uso de la biblioteca.",
+        descripcion: "Acciones del personal bibliotecario para involucrar activamente a la comunidad en la toma de decisiones, promoviendo procesos colaborativos que influyen en el diseño, gestión y uso de la biblioteca.",
         criterios: [],
       },
       {
