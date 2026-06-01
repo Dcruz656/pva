@@ -260,7 +260,7 @@ export const SUBDIMENSIONES_INDICE2 = [
       {
         clave: "SC1",
         nombre: "SC1. Participación",
-        descripcion: "Grado en que la comunidad interviene activamente en la configuración, toma de decisiones y aprovechamiento de la biblioteca, incidiendo de manera directa en su diseño, funcionamiento y evolución.",
+        descripcion: "Es la participación activa de la comunidad en la configuración biblioteca, incidiendo de manera directa en su diseño, funcionamiento y evolución.",
         criterios: [],
       },
       {
@@ -322,7 +322,7 @@ export const SUBDIMENSIONES_INDICE2 = [
       {
         clave: "SB6",
         nombre: "SB6. Proyección pública",
-        descripcion: "Capacidad del personal para posicionar la biblioteca como un actor relevante en el espacio público mediante estrategias de comunicación, visibilidad y liderazgo cultural.",
+        descripcion: "Proyección pública e influencia personal del bibliotecario que impacta directamente en la imagen de la biblioteca.",
         criterios: [],
       },
       {
