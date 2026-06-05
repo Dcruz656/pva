@@ -134,7 +134,7 @@ export const SUBDIMENSIONES = [
         clave: "EE1",
         nombre: "EE1. Instalaciones básicas",
         descripcion: "El soporte logístico de la infraestructura de la biblioteca. Evalúa la presencia y estado de los servicios esenciales que todo lugar debe tener para garantizar una estancia digna, higiénica y funcional para los usuarios y el personal.",
-        criterios: ["Baños", "Bebederos", "Lockers", "Basura", "Estacionamiento"],
+        criterios: ["Baños", "Fuentes para beber agua", "Lockers", "Basura", "Estacionamiento"],
       },
       {
         clave: "EE2",
